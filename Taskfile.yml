@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Run yarn install
+    cmds:
+      - yarn install
+
+  start:
+    desc: Run yarn start
+    cmds:
+      - yarn start
+
+  test:
+    desc: Run yarn test
+    cmds:
+      - yarn test
+
+  lint:
+    desc: Run yarn lint
+    cmds:
+      - yarn lint
