@@ -1,0 +1,209 @@
+version: '3'
+
+vars:
+  K8S_DIR: ./infrastructure/k8s
+  TERRAFORM_DIR: ./infrastructure/terraform
+  SCRIPTS_DIR: ./scripts
+  LOCAL_KUBECONFIG: ./.kube/config
+
+env:
+  KUBECONFIG: "{{.LOCAL_KUBECONFIG}}"
+
+tasks:
+  setup-remote:
+    desc: Configure kubectl to connect to the Terraform-managed Kubernetes cluster
+    cmds:
+      - |
+        echo "🔧 Configuring kubectl for Terraform-managed Kubernetes cluster..."
+        
+        # Check if Terraform directory exists
+        if [[ ! -f "{{.TERRAFORM_DIR}}/main.tf" ]]; then
+          echo "❌ Error: Terraform directory not found at {{.TERRAFORM_DIR}}"
+          echo "   Make sure the Terraform configuration exists"
+          exit 1
+        fi
+        
+        # Change to Terraform directory
+        cd "{{.TERRAFORM_DIR}}"
+        
+        # Check if Terraform has been initialized
+        if [[ ! -d ".terraform" ]]; then
+          echo "❌ Error: Terraform not initialized"
+          echo "   Run 'task infrastructure:terraform:init' first"
+          exit 1
+        fi
+        
+        # Check if Terraform has been applied and cluster exists
+        echo "📋 Checking Terraform state..."
+        if ! tofu state list 2>/dev/null | grep -q "module.k8s"; then
+          echo "❌ Error: Kubernetes cluster not found in Terraform state"
+          echo "   Run 'task infrastructure:terraform:apply' first to create the cluster"
+          exit 1
+        fi
+        
+        # Get cluster information from Terraform outputs
+        echo "📦 Retrieving cluster information from Terraform..."
+        CLUSTER_ID=$(tofu output -raw cluster_id 2>/dev/null || echo "")
+        CLUSTER_ENDPOINT=$(tofu output -raw cluster_endpoint 2>/dev/null || echo "")
+        
+        if [[ -z "$CLUSTER_ENDPOINT" ]]; then
+          echo "❌ Error: Could not retrieve cluster information from Terraform"
+          echo "   Make sure the cluster has been successfully created and outputs are available"
+          exit 1
+        fi
+        
+        # Get kubeconfig from Terraform
+        echo "⬇️  Retrieving kubeconfig from Terraform..."
+        KUBECONFIG_CONTENT=$(tofu output -raw kubeconfig)
+        
+        # Call the setup script with the cluster information
+        "{{.SCRIPTS_DIR}}/setup-kubectl.sh" "$CLUSTER_ID" "$CLUSTER_ENDPOINT" "$KUBECONFIG_CONTENT"
+
+  setup-local:
+    desc: Configure kubectl to connect to a local Kubernetes cluster
+    cmds:
+      - "{{.SCRIPTS_DIR}}/setup-kubectl-local.sh"
+
+  setup:
+    desc: "Configure kubectl for any cluster type (usage: task infrastructure:k8s:setup -- [remote|local])"
+    cmds:
+      - |
+        CLUSTER_TYPE="{{.CLI_ARGS}}"
+        if [ -z "$CLUSTER_TYPE" ]; then
+          CLUSTER_TYPE="remote"
+        fi
+        
+        case "$CLUSTER_TYPE" in
+          "remote")
+            task infrastructure:k8s:setup-remote
+            ;;
+          "local")
+            task infrastructure:k8s:setup-local
+            ;;
+          *)
+            echo "❌ Error: Unknown cluster type '$CLUSTER_TYPE'"
+            echo "   Supported types: remote, local"
+            exit 1
+            ;;
+        esac
+
+  info:
+    desc: Show cluster information
+    deps: [check-connection]
+    cmds:
+      - kubectl cluster-info
+      - echo ""
+      - kubectl get nodes
+
+  check-connection:
+    desc: Check if kubectl is connected to a cluster
+    silent: true
+    cmds:
+      - kubectl cluster-info --request-timeout=5s > /dev/null
+
+  get-nodes:
+    desc: List all nodes in the cluster
+    deps: [check-connection]
+    cmds:
+      - kubectl get nodes -o wide
+
+  get-pods:
+    desc: List all pods in all namespaces
+    deps: [check-connection]
+    cmds:
+      - kubectl get pods --all-namespaces
+
+  get-services:
+    desc: List all services in all namespaces
+    deps: [check-connection]
+    cmds:
+      - kubectl get services --all-namespaces
+
+  get-contexts:
+    desc: List available kubectl contexts
+    cmds:
+      - kubectl config get-contexts
+
+  switch-context:
+    desc: "Switch kubectl context (usage: task k8s:switch-context -- <context-name>)"
+    cmds:
+      - kubectl config use-context {{.CLI_ARGS}}
+
+  apply:
+    desc: Apply Kubernetes manifests from the k8s directory
+    deps: [check-connection]
+    dir: "{{.K8S_DIR}}"
+    cmds:
+      - kubectl apply -f .
+
+  delete:
+    desc: Delete Kubernetes manifests from the k8s directory
+    deps: [check-connection]
+    dir: "{{.K8S_DIR}}"
+    prompt: Are you sure you want to delete these Kubernetes resources?
+    cmds:
+      - kubectl delete -f .
+
+  logs:
+    desc: "Show logs for a pod (usage: task k8s:logs -- <pod-name> [namespace])"
+    deps: [check-connection]
+    cmds:
+      - |
+        if [ -n "{{index .CLI_ARGS 1}}" ]; then
+          kubectl logs {{index .CLI_ARGS 0}} -n {{index .CLI_ARGS 1}} -f
+        else
+          kubectl logs {{index .CLI_ARGS 0}} -f
+        fi
+
+  describe:
+    desc: "Describe a Kubernetes resource (usage: task k8s:describe -- <resource-type/name>)"
+    deps: [check-connection]
+    cmds:
+      - kubectl describe {{.CLI_ARGS}}
+
+  port-forward:
+    desc: "Port forward to a service or pod (usage: task k8s:port-forward -- <resource> <local-port:remote-port>)"
+    deps: [check-connection]
+    cmds:
+      - kubectl port-forward {{.CLI_ARGS}}
+
+  exec:
+    desc: "Execute command in a pod (usage: task k8s:exec -- <pod-name> [namespace] -- <command>)"
+    deps: [check-connection]
+    cmds:
+      - |
+        if [ -n "{{index .CLI_ARGS 1}}" ] && [ "{{index .CLI_ARGS 2}}" = "--" ]; then
+          kubectl exec -it {{index .CLI_ARGS 0}} -n {{index .CLI_ARGS 1}} -- {{slice .CLI_ARGS 3 | join " "}}
+        else
+          kubectl exec -it {{index .CLI_ARGS 0}} -- {{slice .CLI_ARGS 2 | join " "}}
+        fi
+
+  create-namespace:
+    desc: "Create a new namespace (usage: task k8s:create-namespace -- <namespace-name>)"
+    deps: [check-connection]
+    cmds:
+      - kubectl create namespace {{.CLI_ARGS}}
+
+  get-secrets:
+    desc: "List secrets in a namespace (usage: task k8s:get-secrets -- [namespace])"
+    deps: [check-connection]
+    cmds:
+      - |
+        if [ -n "{{.CLI_ARGS}}" ]; then
+          kubectl get secrets -n {{.CLI_ARGS}}
+        else
+          kubectl get secrets
+        fi
+
+  dashboard:
+    desc: Start Kubernetes dashboard (if installed)
+    deps: [check-connection]
+    cmds:
+      - kubectl proxy --port=8001
+      - |
+        echo "Dashboard available at: http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/"
+
+  version:
+    desc: Show kubectl and cluster version
+    cmds:
+      - kubectl version

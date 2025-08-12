@@ -16,3 +16,8 @@ projects/common/docs
 .eslintcache
 
 .env
+
+.terraform
+
+# Local Kubernetes config
+.kube/

@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "dbaeumer.vscode-eslint",
-        "bbenoist.nix"
+        "bbenoist.nix",
+        "4ops.terraform"
     ]
 }

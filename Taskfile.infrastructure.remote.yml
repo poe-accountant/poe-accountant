@@ -1,0 +1,101 @@
+version: '3'
+
+tasks:
+  create:
+    desc: Create the complete remote infrastructure (Terraform apply + kubectl setup)
+    cmds:
+      - |
+        echo "🚀 Creating remote infrastructure..."
+        echo ""
+        echo "📋 Step 1: Applying Terraform configuration..."
+      - task: infrastructure:terraform:apply
+      - |
+        echo ""
+        echo "⚡ Step 2: Configuring kubectl..."
+      - task: infrastructure:k8s:setup-remote
+      - |
+        echo ""
+        echo "✅ Remote infrastructure created and configured!"
+        echo "🔍 Verifying cluster connection..."
+      - task: infrastructure:k8s:info
+
+  setup:
+    desc: Setup connection to existing remote infrastructure
+    cmds:
+      - echo "🔧 Setting up connection to remote infrastructure..."
+      - echo ""
+      - echo "📋 Configuring kubectl..."
+      - task: infrastructure:k8s:setup-remote
+      - echo ""
+      - echo "✅ Remote infrastructure connection configured!"
+      - echo "🔍 Verifying cluster connection..."
+      - task: infrastructure:k8s:info
+
+  plan:
+    desc: Plan the remote infrastructure changes
+    cmds:
+      - echo "📋 Planning remote infrastructure changes..."
+      - task: infrastructure:terraform:plan
+
+  destroy:
+    desc: Destroy the complete remote infrastructure
+    prompt: Are you sure you want to DESTROY all remote infrastructure?
+    cmds:
+      - echo "💥 Destroying remote infrastructure..."
+      - echo ""
+      - echo "⚠️  This will destroy:"
+      - echo "   • Kubernetes cluster and all workloads"
+      - echo "   • PostgreSQL database and all data"
+      - echo "   • Redis instance and all data"
+      - echo ""
+      - task: infrastructure:terraform:destroy
+      - echo ""
+      - echo "💀 Remote infrastructure destroyed!"
+
+  status:
+    desc: Show status of remote infrastructure
+    cmds:
+      - echo "📊 Remote Infrastructure Status"
+      - echo "==============================="
+      - echo ""
+      - echo "🏗️  Terraform Resources:"
+      - task: infrastructure:terraform:show
+      - echo ""
+      - echo "☸️  Kubernetes Cluster:"
+      - task: infrastructure:k8s:info
+
+  outputs:
+    desc: Show remote infrastructure outputs
+    cmds:
+      - echo "📋 Remote Infrastructure Outputs"
+      - echo "================================="
+      - task: infrastructure:terraform:output
+
+  validate:
+    desc: Validate remote infrastructure configuration
+    cmds:
+      - echo "✅ Validating remote infrastructure..."
+      - echo ""
+      - echo "🔍 Terraform validation:"
+      - task: infrastructure:terraform:validate
+      - echo ""
+      - echo "🔍 Terraform format check:"
+      - task: infrastructure:terraform:format:check
+      - echo ""
+      - echo "✅ Remote infrastructure validation complete!"
+
+  refresh:
+    desc: Refresh remote infrastructure state
+    cmds:
+      - echo "🔄 Refreshing remote infrastructure state..."
+      - task: infrastructure:terraform:refresh
+      - echo ""
+      - echo "✅ Remote infrastructure state refreshed!"
+
+  backup-config:
+    desc: Backup remote infrastructure configuration
+    cmds:
+      - echo "💾 Backing up remote infrastructure configuration..."
+      - mkdir -p backups
+      - cp -r infrastructure/ backups/infrastructure-$(date +%Y%m%d-%H%M%S)/
+      - echo "✅ Configuration backed up to backups/ directory"

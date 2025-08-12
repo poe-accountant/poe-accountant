@@ -1,0 +1,305 @@
+version: '3'
+
+tasks:
+  create:
+    desc: Create and start local Redis and PostgreSQL containers
+    cmds:
+      - echo "🐳 Creating local infrastructure with Docker Compose..."
+      - docker compose up -d
+      - echo ""
+      - echo "⏳ Waiting for services to be healthy..."
+      - task: wait-for-health
+      - echo ""
+      - echo "✅ Local infrastructure created and started!"
+      - task: status
+
+  setup:
+    desc: Setup connection to existing local infrastructure
+    cmds:
+      - echo "🔧 Setting up connection to local infrastructure..."
+      - echo ""
+      - echo "🔍 Checking if containers are running..."
+      - task: status
+      - echo ""
+      - echo "✅ Local infrastructure connection verified!"
+      - task: env-vars
+
+  start:
+    desc: Start local Redis and PostgreSQL containers
+    cmds:
+      - echo "🐳 Starting local infrastructure with Docker Compose..."
+      - docker compose up -d
+      - echo ""
+      - echo "⏳ Waiting for services to be healthy..."
+      - task: wait-for-health
+      - echo ""
+      - echo "✅ Local infrastructure started!"
+      - task: status
+
+  stop:
+    desc: Stop local Redis and PostgreSQL containers
+    cmds:
+      - echo "🛑 Stopping local infrastructure..."
+      - docker compose stop
+      - echo "✅ Local infrastructure stopped!"
+
+  restart:
+    desc: Restart local infrastructure
+    cmds:
+      - echo "🔄 Restarting local infrastructure..."
+      - docker compose restart
+      - echo ""
+      - echo "⏳ Waiting for services to be healthy..."
+      - task: wait-for-health
+      - echo ""
+      - echo "✅ Local infrastructure restarted!"
+      - task: status
+
+  status:
+    desc: Show status of local infrastructure containers
+    cmds:
+      - |
+        echo "📊 Local Infrastructure Status"
+        echo "=============================="
+        docker compose ps
+        echo ""
+        echo "🔌 Connection Details:"
+        echo "PostgreSQL: postgresql://${LOCAL_POSTGRES_USER:-poe_user}:${LOCAL_POSTGRES_PASSWORD:-poe_password}@localhost:${LOCAL_POSTGRES_PORT:-5432}/${LOCAL_POSTGRES_DB:-poe_accountant}"
+        echo "Redis:      redis://localhost:${LOCAL_REDIS_PORT:-6379}"
+
+  logs:
+    desc: "Show logs for local infrastructure (usage: task infrastructure:local:logs -- [postgres|redis])"
+    cmds:
+      - |
+        if [ "{{.CLI_ARGS}}" = "postgres" ]; then
+          docker compose logs -f postgres
+        elif [ "{{.CLI_ARGS}}" = "redis" ]; then
+          docker compose logs -f redis
+        else
+          docker compose logs --tail=20
+        fi
+
+  destroy:
+    desc: Destroy local infrastructure containers and volumes
+    prompt: Are you sure you want to remove all local infrastructure data?
+    cmds:
+      - echo "💥 Destroying local infrastructure..."
+      - docker compose down -v --remove-orphans
+      - echo "💀 Local infrastructure destroyed!"
+
+  clean:
+    desc: Stop and remove local infrastructure containers and volumes (alias for destroy)
+    prompt: Are you sure you want to remove all local infrastructure data?
+    cmds:
+      - task: destroy
+
+  plan:
+    desc: Show planned changes for local infrastructure
+    cmds:
+      - echo "📋 Planning local infrastructure changes..."
+      - echo ""
+      - echo "🔍 Current configuration:"
+      - docker compose config
+      - echo ""
+      - echo "📊 Current status:"
+      - task: status
+
+  outputs:
+    desc: Show local infrastructure outputs
+    cmds:
+      - echo "📋 Local Infrastructure Outputs"
+      - echo "==============================="
+      - task: env-vars
+
+  validate:
+    desc: Validate local infrastructure configuration
+    cmds:
+      - echo "✅ Validating local infrastructure..."
+      - echo ""
+      - echo "🔍 Docker Compose validation:"
+      - docker compose config --quiet
+      - echo "✅ Docker Compose configuration is valid!"
+      - echo ""
+      - echo "🔍 Testing connections:"
+      - task: test-connections
+      - echo ""
+      - echo "✅ Local infrastructure validation complete!"
+
+  refresh:
+    desc: Refresh local infrastructure state
+    cmds:
+      - echo "🔄 Refreshing local infrastructure state..."
+      - docker compose pull
+      - task: restart
+      - echo ""
+      - echo "✅ Local infrastructure state refreshed!"
+
+  backup-config:
+    desc: Backup local infrastructure configuration
+    cmds:
+      - echo "💾 Backing up local infrastructure configuration..."
+      - mkdir -p backups
+      - cp docker-compose.yml backups/docker-compose-$(date +%Y%m%d-%H%M%S).yml
+      - cp .env backups/.env-$(date +%Y%m%d-%H%M%S)
+      - echo "✅ Configuration backed up to backups/ directory"
+
+  wait-for-health:
+    desc: Wait for all services to be healthy
+    internal: true
+    cmds:
+      - |
+        echo "⏳ Waiting for PostgreSQL to be healthy..."
+        for i in {1..30}; do
+          if docker compose exec -T postgres pg_isready -U ${LOCAL_POSTGRES_USER:-poe_user} > /dev/null 2>&1; then
+            echo "✅ PostgreSQL is healthy!"
+            break
+          fi
+          sleep 1
+        done
+      - |
+        echo "⏳ Waiting for Redis to be healthy..."
+        for i in {1..15}; do
+          if docker compose exec -T redis redis-cli ping > /dev/null 2>&1; then
+            echo "✅ Redis is healthy!"
+            break
+          fi
+          sleep 1
+        done
+
+  pull:
+    desc: Pull latest images for local infrastructure
+    cmds:
+      - echo "📥 Pulling latest Docker images..."
+      - docker compose pull
+      - echo "✅ Images updated!"
+
+  build:
+    desc: Build/rebuild local infrastructure containers
+    cmds:
+      - echo "🔨 Building local infrastructure..."
+      - docker compose build
+      - echo "✅ Build complete!"
+
+  postgres-shell:
+    desc: Connect to PostgreSQL shell
+    deps: [check-postgres-running]
+    cmds:
+      - docker compose exec postgres psql -U ${LOCAL_POSTGRES_USER:-poe_user} -d ${LOCAL_POSTGRES_DB:-poe_accountant}
+
+  redis-cli:
+    desc: Connect to Redis CLI
+    deps: [check-redis-running]
+    cmds:
+      - docker compose exec redis redis-cli
+
+  backup-postgres:
+    desc: Backup PostgreSQL database
+    deps: [check-postgres-running]
+    cmds:
+      - mkdir -p backups
+      - |
+        BACKUP_FILE="backups/postgres-backup-$(date +%Y%m%d-%H%M%S).sql"
+        echo "💾 Creating PostgreSQL backup: $BACKUP_FILE"
+        docker compose exec postgres pg_dump -U ${LOCAL_POSTGRES_USER} ${LOCAL_POSTGRES_DB} > "$BACKUP_FILE"
+        echo "✅ Backup created: $BACKUP_FILE"
+
+  restore-postgres:
+    desc: "Restore PostgreSQL database from backup (usage: task infrastructure:local:restore-postgres -- <backup-file>)"
+    deps: [check-postgres-running]
+    cmds:
+      - |
+        if [ -z "{{.CLI_ARGS}}" ]; then
+          echo "❌ Error: Please specify backup file"
+          echo "   Usage: task infrastructure:local:restore-postgres -- <backup-file>"
+          exit 1
+        fi
+        if [ ! -f "{{.CLI_ARGS}}" ]; then
+          echo "❌ Error: Backup file not found: {{.CLI_ARGS}}"
+          exit 1
+        fi
+        echo "🔄 Restoring PostgreSQL from: {{.CLI_ARGS}}"
+        docker compose exec -T postgres psql -U ${LOCAL_POSTGRES_USER} -d ${LOCAL_POSTGRES_DB} < "{{.CLI_ARGS}}"
+        echo "✅ Database restored!"
+
+  check-postgres-running:
+    desc: Check if PostgreSQL container is running
+    internal: true
+    cmds:
+      - |
+        if ! docker compose ps postgres | grep -q "Up"; then
+          echo "❌ Error: PostgreSQL container is not running"
+          echo "   Start it with: task infrastructure:local:start"
+          exit 1
+        fi
+    silent: true
+
+  check-redis-running:
+    desc: Check if Redis container is running
+    internal: true
+    cmds:
+      - |
+        if ! docker compose ps redis | grep -q "Up"; then
+          echo "❌ Error: Redis container is not running"
+          echo "   Start it with: task infrastructure:local:start"
+          exit 1
+        fi
+    silent: true
+
+  test-connections:
+    desc: Test connections to local infrastructure
+    deps: [check-postgres-running, check-redis-running]
+    cmds:
+      - echo "🔍 Testing local infrastructure connections..."
+      - echo ""
+      - echo "📋 PostgreSQL connection test:"
+      - docker compose exec postgres pg_isready -U ${LOCAL_POSTGRES_USER}
+      - echo ""
+      - echo "📋 Redis connection test:"
+      - docker compose exec redis redis-cli ping
+      - echo ""
+      - echo "✅ All connections successful!"
+
+  env-vars:
+    desc: Show environment variables for local infrastructure
+    cmds:
+      - echo "📋 Local Infrastructure Environment Variables"
+      - echo "============================================="
+      - echo ""
+      - echo "# PostgreSQL"
+      - echo "DATABASE_URL=postgresql://${LOCAL_POSTGRES_USER}:${LOCAL_POSTGRES_PASSWORD}@localhost:${LOCAL_POSTGRES_PORT}/${LOCAL_POSTGRES_DB}"
+      - echo "POSTGRES_HOST=localhost"
+      - echo "POSTGRES_PORT=${LOCAL_POSTGRES_PORT}"
+      - echo "POSTGRES_DB=${LOCAL_POSTGRES_DB}"
+      - echo "POSTGRES_USER=${LOCAL_POSTGRES_USER}"
+      - echo "POSTGRES_PASSWORD=${LOCAL_POSTGRES_PASSWORD}"
+      - echo ""
+      - echo "# Redis"
+      - echo "REDIS_URL=redis://localhost:${LOCAL_REDIS_PORT}"
+      - echo "REDIS_HOST=localhost"
+      - echo "REDIS_PORT=${LOCAL_REDIS_PORT}"
+
+  help:
+    desc: Show help for local infrastructure commands
+    cmds:
+      - echo "🐳 Local Infrastructure Commands (Docker Compose)"
+      - echo "================================================="
+      - echo ""
+      - echo "🚀 Lifecycle Commands:"
+      - echo "   start             - Start PostgreSQL and Redis containers"
+      - echo "   stop              - Stop containers"
+      - echo "   restart           - Restart containers"
+      - echo "   clean             - Remove containers and volumes (DESTRUCTIVE!)"
+      - echo ""
+      - echo "📊 Information Commands:"
+      - echo "   status            - Show container status and connection info"
+      - echo "   logs              - Show container logs"
+      - echo "   env-vars          - Show environment variables for apps"
+      - echo ""
+      - echo "🔌 Connection Commands:"
+      - echo "   postgres-shell    - Connect to PostgreSQL shell"
+      - echo "   redis-cli         - Connect to Redis CLI"
+      - echo "   test-connections  - Test all connections"
+      - echo ""
+      - echo "💾 Backup Commands:"
+      - echo "   backup-postgres   - Create PostgreSQL backup"
+      - echo "   restore-postgres  - Restore from backup"

@@ -20,6 +20,9 @@
             yarn
             curl
             go-task
+            opentofu
+            kubectl
+            bash
           ];
 
           nativeBuildInputs = with pkgs; [
@@ -32,6 +35,8 @@
             echo "Yarn version: $(yarn --version)"
             echo "Curl version: $(curl --version | head -n1)"
             echo "Task version: $(task --version)"
+            echo "Terraform version: $(tofu --version | head -n1)"
+            echo "kubectl version: $(kubectl version --client --short 2>/dev/null || echo 'Not connected to cluster')"
           '';
         };
       });

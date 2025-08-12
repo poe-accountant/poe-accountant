@@ -1,0 +1,176 @@
+version: '3'
+
+vars:
+  TERRAFORM_DIR: ./infrastructure/terraform
+  TFVARS_FILE: terraform.tfvars
+
+tasks:
+  init:
+    desc: Initialize Terraform in the infrastructure/terraform directory
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu init
+
+  init:upgrade:
+    desc: Initialize Terraform with provider upgrades
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu init -upgrade
+
+  plan:
+    desc: Run Terraform plan to see what changes will be made
+    dir: "{{.TERRAFORM_DIR}}"
+    deps: [validate]
+    cmds:
+      - tofu plan -var-file={{.TFVARS_FILE}}
+
+  plan:destroy:
+    desc: Run Terraform plan for destroy to see what will be destroyed
+    dir: "{{.TERRAFORM_DIR}}"
+    deps: [validate]
+    cmds:
+      - tofu plan -destroy -var-file={{.TFVARS_FILE}}
+
+  apply:
+    desc: Apply Terraform changes
+    dir: "{{.TERRAFORM_DIR}}"
+    deps: [validate]
+    prompt: Are you sure you want to apply these Terraform changes?
+    cmds:
+      - tofu apply -var-file={{.TFVARS_FILE}}
+
+  apply:auto:
+    desc: Apply Terraform changes without interactive approval
+    dir: "{{.TERRAFORM_DIR}}"
+    deps: [validate]
+    cmds:
+      - tofu apply -auto-approve -var-file={{.TFVARS_FILE}}
+
+  destroy:
+    desc: Destroy Terraform-managed infrastructure
+    dir: "{{.TERRAFORM_DIR}}"
+    deps: [validate]
+    prompt: Are you sure you want to DESTROY all Terraform-managed infrastructure?
+    cmds:
+      - tofu destroy -var-file={{.TFVARS_FILE}}
+
+  destroy:auto:
+    desc: Destroy Terraform-managed infrastructure without interactive approval
+    dir: "{{.TERRAFORM_DIR}}"
+    deps: [validate]
+    cmds:
+      - tofu destroy -auto-approve -var-file={{.TFVARS_FILE}}
+
+  validate:
+    desc: Validate Terraform configuration files
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu validate
+
+  format:
+    desc: Format Terraform configuration files
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu fmt -recursive
+
+  format:check:
+    desc: Check if Terraform files are properly formatted
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu fmt -check -recursive
+
+  show:
+    desc: Show current Terraform state
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu show
+
+  state:list:
+    desc: List all resources in Terraform state
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu state list
+
+  state:show:
+    desc: "Show details of a specific resource (usage: task terraform:state:show -- <resource_name>)"
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu state show {{.CLI_ARGS}}
+
+  output:
+    desc: Show Terraform outputs
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu output
+
+  output:json:
+    desc: Show Terraform outputs in JSON format
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu output -json
+
+  workspace:list:
+    desc: List Terraform workspaces
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu workspace list
+
+  workspace:new:
+    desc: "Create new Terraform workspace (usage: task terraform:workspace:new -- <workspace_name>)"
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu workspace new {{.CLI_ARGS}}
+
+  workspace:select:
+    desc: "Select Terraform workspace (usage: task terraform:workspace:select -- <workspace_name>)"
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu workspace select {{.CLI_ARGS}}
+
+  setup:
+    desc: Initial setup - copy example tfvars and initialize
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - cmd: cp terraform.tfvars.example {{.TFVARS_FILE}}
+        ignore_error: true
+      - echo "Please edit {{.TFVARS_FILE}} with your actual values before running other tasks"
+      - tofu init
+
+  clean:
+    desc: Clean Terraform cache and temporary files
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - rm -rf .terraform
+      - rm -f .terraform.lock.hcl
+      - rm -f terraform.tfstate.backup
+
+  lint:
+    desc: Run comprehensive checks (format check + validate)
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu fmt -check -recursive
+      - tofu validate
+
+  refresh:
+    desc: Refresh Terraform state to match real infrastructure
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu refresh -var-file={{.TFVARS_FILE}}
+
+  import:
+    desc: "Import existing resource into Terraform state (usage: task terraform:import -- <resource_type.name> <resource_id>)"
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu import {{.CLI_ARGS}}
+
+  graph:
+    desc: Generate and display Terraform dependency graph
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu graph | dot -Tsvg > terraform-graph.svg
+      - echo "Graph saved to terraform-graph.svg"
+
+  version:
+    desc: Show OpenTofu version
+    cmds:
+      - tofu version
