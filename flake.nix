@@ -17,7 +17,7 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             nodejs_22
-            yarn
+            yarn-berry
             curl
             go-task
             opentofu

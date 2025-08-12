@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Script to configure kubectl using provided cluster information
 # This script echo ""

@@ -8,15 +8,16 @@
   "type": "module",
   "scripts": {
     "build": "nest build -p tsconfig.lib.json",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start": "nest start -p tsconfig.lib.json",
+    "start:dev": "yarn start --watch",
+    "start:debug": "yarn start --debug --watch",
+    "start:prod": "node dist/src/main",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@meepen/poe-accountant-api": "*",
+    "@meepen/poe-accountant-api": "workspace:^",
+    "@meepen/poe-common": "workspace:^",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -40,5 +41,8 @@
     "supertest": "^7.0.0",
     "tsconfig-paths": "^4.2.0",
     "unplugin-swc": "^1.5.5"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

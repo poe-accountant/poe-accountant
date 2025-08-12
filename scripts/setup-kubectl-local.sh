@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Script to configure kubectl for local Kubernetes clusters
 # This script detects and configures kubectl for Docker Desktop or minikube
@@ -19,9 +19,8 @@ setup_docker_desktop() {
     echo "🐳 Setting up Docker Desktop Kubernetes..."
     
     # Use environment variables from .envrc
-    LOCAL_KUBE_DIR="$(dirname "$KUBECONFIG")"
-    LOCAL_KUBECONFIG="$KUBECONFIG"
-    mkdir -p "$LOCAL_KUBE_DIR"
+    KUBECONFIG_DIR="$(dirname "$KUBECONFIG")"
+    mkdir -p "$KUBECONFIG_DIR"
     
     # Check if we're running in WSL2
     if [[ "$IS_WSL2" == "true" ]]; then
@@ -37,23 +36,23 @@ setup_docker_desktop() {
             # Check if Windows kubeconfig exists
             if [[ -f "$WIN_KUBECONFIG" ]]; then
                 # Backup existing local kubeconfig if it exists
-                if [[ -f "$LOCAL_KUBECONFIG" ]]; then
-                    echo "💾 Backing up existing local kubeconfig to $LOCAL_KUBE_DIR/config.backup.$(date +%Y%m%d-%H%M%S)"
-                    cp "$LOCAL_KUBECONFIG" "$LOCAL_KUBE_DIR/config.backup.$(date +%Y%m%d-%H%M%S)"
+                if [[ -f "$KUBECONFIG" ]]; then
+                    echo "💾 Backing up existing local kubeconfig to $KUBECONFIG_DIR/config.backup.$(date +%Y%m%d-%H%M%S)"
+                    cp "$KUBECONFIG" "$KUBECONFIG_DIR/config.backup.$(date +%Y%m%d-%H%M%S)"
                 fi
                 
                 # Merge Windows kubeconfig with local kubeconfig
-                if [[ -f "$LOCAL_KUBECONFIG" ]] && [[ -s "$LOCAL_KUBECONFIG" ]]; then
+                if [[ -f "$KUBECONFIG" ]] && [[ -s "$KUBECONFIG" ]]; then
                     echo "🔗 Merging Windows kubeconfig with existing local kubeconfig..."
-                    KUBECONFIG="$LOCAL_KUBECONFIG:$WIN_KUBECONFIG" kubectl config view --flatten > "$LOCAL_KUBECONFIG.new"
-                    mv "$LOCAL_KUBECONFIG.new" "$LOCAL_KUBECONFIG"
+                    KUBECONFIG="$KUBECONFIG:$WIN_KUBECONFIG" kubectl config view --flatten > "$KUBECONFIG.new"
+                    mv "$KUBECONFIG.new" "$KUBECONFIG"
                 else
                     echo "📝 Creating local kubeconfig from Windows kubeconfig..."
-                    cp "$WIN_KUBECONFIG" "$LOCAL_KUBECONFIG"
+                    cp "$WIN_KUBECONFIG" "$KUBECONFIG"
                 fi
                 
                 # Set appropriate permissions
-                chmod 600 "$LOCAL_KUBECONFIG"
+                chmod 600 "$KUBECONFIG"
             else
                 echo "⚠️  Windows kubeconfig not found at: $WIN_KUBECONFIG"
                 echo "   Make sure Docker Desktop is installed and Kubernetes is enabled"
@@ -73,7 +72,7 @@ setup_docker_desktop() {
             echo "✅ Successfully configured kubectl for Docker Desktop!"
             
             # Inform about the local kubeconfig setup
-            echo "📍 Local kubeconfig location: $LOCAL_KUBECONFIG"
+            echo "📍 Local kubeconfig location: $KUBECONFIG"
             
             return 0
         else

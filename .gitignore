@@ -21,3 +21,5 @@ projects/common/docs
 
 # Local Kubernetes config
 .kube/
+
+.yarn

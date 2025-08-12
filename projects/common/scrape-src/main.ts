@@ -23,7 +23,7 @@ for (const type of typesManager.generateTypeScriptTypes()) {
   outStream.write(type);
 }
 
-const data = await fetch('https://www.pathofexile.com/api/trade/data/stats');
+const data = await readFile('./docs/stats.json', 'utf-8');
 await writeFile(
   './src/trade-stats.gen.ts',
   `import { Type, plainToInstance } from 'class-transformer';
@@ -79,7 +79,7 @@ export class TradeStats {
   result!: TradeStatsGroup[];
 }
 
-export const tradeStats = plainToInstance(TradeStats, ${JSON.stringify(await data.json(), null, 2)});
+export const tradeStats = plainToInstance(TradeStats, ${JSON.stringify(JSON.parse(data), null, 2)});
 `,
   'utf-8',
 );

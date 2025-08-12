@@ -1,0 +1,14 @@
+# General:
+**/.*
+scripts
+**/*.md
+infrastructure
+.envrc
+docker-compose.yml
+flake.*
+Taskfile*.yml
+*.tgz
+
+# For yarn:
+**/dist
+**/node_modules

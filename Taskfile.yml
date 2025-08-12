@@ -15,6 +15,9 @@ includes:
   infrastructure:k8s:
     taskfile: ./Taskfile.infrastructure.k8s.yml
     dir: .
+  docker:
+    taskfile: ./Taskfile.docker.yml
+    dir: .
 
 tasks:
   install:

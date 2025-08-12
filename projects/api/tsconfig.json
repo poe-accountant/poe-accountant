@@ -18,7 +18,6 @@
         { "path": "./tsconfig.configs.json" }
     ],
     "exclude": [
-        "node_modules",
         "dist"
     ]
 }
