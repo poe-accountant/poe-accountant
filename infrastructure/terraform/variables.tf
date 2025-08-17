@@ -1,13 +1,13 @@
-variable "do_token" {
-  description = "DigitalOcean API token"
-  type        = string
-  sensitive   = true
-}
-
 variable "project_name" {
   description = "Name of the project (used for resource naming)"
   type        = string
   default     = "poe-accountant"
+}
+
+variable "project_description" {
+  description = "Description of the DigitalOcean project"
+  type        = string
+  default     = "Infrastructure for POE Accountant application"
 }
 
 variable "cluster_name" {
@@ -57,26 +57,26 @@ variable "tags" {
   default     = null  # Will use [project_name, "terraform"] if not set
 }
 
-variable "redis_name" {
-  description = "Name of the Redis database cluster"
+variable "valkey_name" {
+  description = "Name of the Valkey database cluster"
   type        = string
-  default     = null  # Will use cluster_name-redis if not set
+  default     = null  # Will use cluster_name-valkey if not set
 }
 
-variable "redis_version" {
-  description = "Redis version"
+variable "valkey_version" {
+  description = "Valkey version"
   type        = string
   default     = "7"
 }
 
-variable "redis_size" {
-  description = "Size of the Redis database cluster"
+variable "valkey_size" {
+  description = "Size of the Valkey database cluster"
   type        = string
   default     = "db-s-1vcpu-1gb"
 }
 
-variable "redis_node_count" {
-  description = "Number of Redis nodes"
+variable "valkey_node_count" {
+  description = "Number of Valkey nodes"
   type        = number
   default     = 1
 }
@@ -109,4 +109,17 @@ variable "database_name" {
   description = "Name of the application database"
   type        = string
   default     = null  # Will use project_name with underscores if not set
+}
+
+# Container Registry variables
+variable "registry_name" {
+  description = "Name of the container registry"
+  type        = string
+  default     = null  # Will use project_name-registry if not set
+}
+
+variable "registry_subscription_tier" {
+  description = "Subscription tier for the container registry"
+  type        = string
+  default     = "basic"  # Basic tier is $5/month
 }

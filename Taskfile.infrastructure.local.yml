@@ -1,31 +1,25 @@
 version: '3'
 
 tasks:
-  create:
+  provision:
     desc: Create and start local Redis and PostgreSQL containers
     cmds:
       - echo "🐳 Creating local infrastructure with Docker Compose..."
       - docker compose up -d
+      - echo "✅ Local infrastructure provisioned!"
       - echo ""
-      - echo "⏳ Waiting for services to be healthy..."
-      - task: wait-for-health
-      - echo ""
-      - echo "✅ Local infrastructure created and started!"
-      - task: status
 
   setup:
     desc: Setup connection to existing local infrastructure
     cmds:
       - echo "🔧 Setting up connection to local infrastructure..."
       - echo ""
-      - echo "🔍 Checking if containers are running..."
-      - task: status
+      - ./scripts/setup-kubectl-local.sh
       - echo ""
-      - echo "✅ Local infrastructure connection verified!"
-      - task: env-vars
 
   start:
     desc: Start local Redis and PostgreSQL containers
+    deps: [setup]
     cmds:
       - echo "🐳 Starting local infrastructure with Docker Compose..."
       - docker compose up -d
@@ -33,13 +27,28 @@ tasks:
       - echo "⏳ Waiting for services to be healthy..."
       - task: wait-for-health
       - echo ""
-      - echo "✅ Local infrastructure started!"
-      - task: status
+      - echo "✅ Local managed services started."
+      - task docker:build:all
+      - echo ""
+      - echo "Deploying to k8s"
+      - echo "📦 Updating Helm dependencies..."
+      - helm dependency update ./infrastructure/helm
+      - echo "🚀 Installing/upgrading Helm chart..."
+      - |
+        helm upgrade --install poe-accountant ./infrastructure/helm \
+          --namespace poe-accountant \
+          --create-namespace \
+          --values ./infrastructure/helm/values.yaml \
+          --wait \
+          --debug
 
   stop:
     desc: Stop local Redis and PostgreSQL containers
     cmds:
       - echo "🛑 Stopping local infrastructure..."
+      - echo "🗑️ Uninstalling Helm deployment..."
+      - helm uninstall poe-accountant --namespace poe-accountant || echo "⚠️ Helm deployment not found or already uninstalled"
+      - echo "🛑 Stopping Docker containers..."
       - docker compose stop
       - echo "✅ Local infrastructure stopped!"
 
@@ -67,6 +76,48 @@ tasks:
         echo "PostgreSQL: postgresql://${LOCAL_POSTGRES_USER:-poe_user}:${LOCAL_POSTGRES_PASSWORD:-poe_password}@localhost:${LOCAL_POSTGRES_PORT:-5432}/${LOCAL_POSTGRES_DB:-poe_accountant}"
         echo "Redis:      redis://localhost:${LOCAL_REDIS_PORT:-6379}"
 
+  url:
+    desc: Show application URLs and how to access the services
+    cmds:
+      - |
+        echo "🌐 Application URLs"
+        echo "=================="
+        echo ""
+        
+        # Get ingress controller service details
+        INGRESS_HOST=$(kubectl get service poe-accountant-ingress-nginx-controller -n poe-accountant -o jsonpath='{.status.loadBalancer.ingress[0].ip}{.status.loadBalancer.ingress[0].hostname}')
+        INGRESS_PORT=$(kubectl get service poe-accountant-ingress-nginx-controller -n poe-accountant -o jsonpath='{.spec.ports[?(@.name=="http")].port}')
+        HTTPS_PORT=$(kubectl get service poe-accountant-ingress-nginx-controller -n poe-accountant -o jsonpath='{.spec.ports[?(@.name=="https")].port}')
+        
+        # Fallback to localhost and standard ports if not available
+        if [ -z "$INGRESS_HOST" ]; then
+          INGRESS_HOST="localhost"
+        fi
+        if [ -z "$INGRESS_PORT" ]; then
+          INGRESS_PORT="80"
+        fi
+        if [ -z "$HTTPS_PORT" ]; then
+          HTTPS_PORT="443"
+        fi
+        
+        echo "🚀 Main Application:"
+        echo "   Base URL: http://$INGRESS_HOST:$INGRESS_PORT"
+        echo "   Secure URL: https://$INGRESS_HOST:$HTTPS_PORT"
+        echo ""
+        echo "🔧 API Endpoints:"
+        echo "   Ninja API: http://$INGRESS_HOST:$INGRESS_PORT/api"
+        echo "   Health Check: http://$INGRESS_HOST:$INGRESS_PORT/api/health"
+        echo ""
+        echo "📊 Infrastructure Services:"
+        echo "   PostgreSQL: postgresql://${LOCAL_POSTGRES_USER:-poe_user}:${LOCAL_POSTGRES_PASSWORD:-poe_password}@localhost:${LOCAL_POSTGRES_PORT:-5432}/${LOCAL_POSTGRES_DB:-poe_accountant}"
+        echo "   Redis: redis://localhost:${LOCAL_REDIS_PORT:-6379}"
+        echo ""
+        echo "🔍 Kubernetes Resources:"
+        echo "   Namespace: poe-accountant"
+        echo "   Ingress Controller: $INGRESS_HOST (HTTP: $INGRESS_PORT, HTTPS: $HTTPS_PORT)"
+        echo ""
+        echo "💡 Tip: Use 'kubectl get services -n poe-accountant' to see all service details"
+
   logs:
     desc: "Show logs for local infrastructure (usage: task infrastructure:local:logs -- [postgres|redis])"
     cmds:
@@ -87,30 +138,6 @@ tasks:
       - docker compose down -v --remove-orphans
       - echo "💀 Local infrastructure destroyed!"
 
-  clean:
-    desc: Stop and remove local infrastructure containers and volumes (alias for destroy)
-    prompt: Are you sure you want to remove all local infrastructure data?
-    cmds:
-      - task: destroy
-
-  plan:
-    desc: Show planned changes for local infrastructure
-    cmds:
-      - echo "📋 Planning local infrastructure changes..."
-      - echo ""
-      - echo "🔍 Current configuration:"
-      - docker compose config
-      - echo ""
-      - echo "📊 Current status:"
-      - task: status
-
-  outputs:
-    desc: Show local infrastructure outputs
-    cmds:
-      - echo "📋 Local Infrastructure Outputs"
-      - echo "==============================="
-      - task: env-vars
-
   validate:
     desc: Validate local infrastructure configuration
     cmds:
@@ -124,47 +151,6 @@ tasks:
       - task: test-connections
       - echo ""
       - echo "✅ Local infrastructure validation complete!"
-
-  refresh:
-    desc: Refresh local infrastructure state
-    cmds:
-      - echo "🔄 Refreshing local infrastructure state..."
-      - docker compose pull
-      - task: restart
-      - echo ""
-      - echo "✅ Local infrastructure state refreshed!"
-
-  backup-config:
-    desc: Backup local infrastructure configuration
-    cmds:
-      - echo "💾 Backing up local infrastructure configuration..."
-      - mkdir -p backups
-      - cp docker-compose.yml backups/docker-compose-$(date +%Y%m%d-%H%M%S).yml
-      - cp .env backups/.env-$(date +%Y%m%d-%H%M%S)
-      - echo "✅ Configuration backed up to backups/ directory"
-
-  wait-for-health:
-    desc: Wait for all services to be healthy
-    internal: true
-    cmds:
-      - |
-        echo "⏳ Waiting for PostgreSQL to be healthy..."
-        for i in {1..30}; do
-          if docker compose exec -T postgres pg_isready -U ${LOCAL_POSTGRES_USER:-poe_user} > /dev/null 2>&1; then
-            echo "✅ PostgreSQL is healthy!"
-            break
-          fi
-          sleep 1
-        done
-      - |
-        echo "⏳ Waiting for Redis to be healthy..."
-        for i in {1..15}; do
-          if docker compose exec -T redis redis-cli ping > /dev/null 2>&1; then
-            echo "✅ Redis is healthy!"
-            break
-          fi
-          sleep 1
-        done
 
   pull:
     desc: Pull latest images for local infrastructure
@@ -259,47 +245,28 @@ tasks:
       - echo ""
       - echo "✅ All connections successful!"
 
-  env-vars:
-    desc: Show environment variables for local infrastructure
+  wait-for-health:
+    desc: Wait for local infrastructure services to be healthy and ready
+    internal: true
     cmds:
-      - echo "📋 Local Infrastructure Environment Variables"
-      - echo "============================================="
-      - echo ""
-      - echo "# PostgreSQL"
-      - echo "DATABASE_URL=postgresql://${LOCAL_POSTGRES_USER}:${LOCAL_POSTGRES_PASSWORD}@localhost:${LOCAL_POSTGRES_PORT}/${LOCAL_POSTGRES_DB}"
-      - echo "POSTGRES_HOST=localhost"
-      - echo "POSTGRES_PORT=${LOCAL_POSTGRES_PORT}"
-      - echo "POSTGRES_DB=${LOCAL_POSTGRES_DB}"
-      - echo "POSTGRES_USER=${LOCAL_POSTGRES_USER}"
-      - echo "POSTGRES_PASSWORD=${LOCAL_POSTGRES_PASSWORD}"
-      - echo ""
-      - echo "# Redis"
-      - echo "REDIS_URL=redis://localhost:${LOCAL_REDIS_PORT}"
-      - echo "REDIS_HOST=localhost"
-      - echo "REDIS_PORT=${LOCAL_REDIS_PORT}"
-
-  help:
-    desc: Show help for local infrastructure commands
-    cmds:
-      - echo "🐳 Local Infrastructure Commands (Docker Compose)"
-      - echo "================================================="
-      - echo ""
-      - echo "🚀 Lifecycle Commands:"
-      - echo "   start             - Start PostgreSQL and Redis containers"
-      - echo "   stop              - Stop containers"
-      - echo "   restart           - Restart containers"
-      - echo "   clean             - Remove containers and volumes (DESTRUCTIVE!)"
-      - echo ""
-      - echo "📊 Information Commands:"
-      - echo "   status            - Show container status and connection info"
-      - echo "   logs              - Show container logs"
-      - echo "   env-vars          - Show environment variables for apps"
-      - echo ""
-      - echo "🔌 Connection Commands:"
-      - echo "   postgres-shell    - Connect to PostgreSQL shell"
-      - echo "   redis-cli         - Connect to Redis CLI"
-      - echo "   test-connections  - Test all connections"
-      - echo ""
-      - echo "💾 Backup Commands:"
-      - echo "   backup-postgres   - Create PostgreSQL backup"
-      - echo "   restore-postgres  - Restore from backup"
+      - |
+        echo "🔍 Waiting for PostgreSQL to be ready..."
+        while ! docker compose exec postgres pg_isready -U ${LOCAL_POSTGRES_USER:-postgres} >/dev/null 2>&1; do
+          echo "  ... PostgreSQL not ready yet, waiting 2 seconds"
+          sleep 2
+        done
+        echo "✅ PostgreSQL is ready!"
+        
+        echo "🔍 Waiting for Redis to be ready..."
+        while ! docker compose exec valkey redis-cli ping >/dev/null 2>&1; do
+          echo "  ... Redis not ready yet, waiting 2 seconds"
+          sleep 2
+        done
+        echo "✅ Redis is ready!"
+        
+        echo "🔍 Verifying services are healthy..."
+        until ! docker compose ps --format "table {{.Name}}\t{{.Status}}" | grep -E "(healthy|Up)" | wc -l | grep -q "2"; do
+          echo "  ... Services still starting, waiting 2 seconds"
+          sleep 2
+        done
+        echo "✅ All services are healthy!"

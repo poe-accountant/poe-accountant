@@ -2,11 +2,12 @@ version: '3'
 
 tasks:
   build:ninja-server:
-    desc: "Build ninja-server Docker image"
     cmds:
-      - docker build --target final --build-arg WORKSPACE=ninja-server -t poe-accountant-ninja-server:latest -f projects/yarn.Dockerfile .
+      - echo "🔨 Building Ninja Server..."
+      - docker build --build-arg WORKSPACE=ninja-server -t poe-accountant-ninja-server:latest -f ./projects/yarn.Dockerfile .
+      - echo "✅ Ninja Server built successfully!"
 
   build:all:
-    desc: "Build all Docker images"
+    deps: [build:ninja-server]
     cmds:
-      - task: docker:build:ninja-server
+      - echo "✅ All Docker images built successfully!"

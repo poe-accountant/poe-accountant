@@ -1,15 +1,6 @@
-terraform {
-  required_providers {
-    digitalocean = {
-      source  = "digitalocean/digitalocean"
-      version = "~> 2.0"
-    }
-  }
-}
-
 resource "digitalocean_database_cluster" "redis" {
-  name       = var.redis_name != null ? var.redis_name : "${var.cluster_name}-redis"
-  engine     = "redis"
+  name       = var.redis_name != null ? var.redis_name : "${var.cluster_name}-valkey"
+  engine     = "valkey"
   version    = var.redis_version
   size       = var.redis_size
   region     = var.region

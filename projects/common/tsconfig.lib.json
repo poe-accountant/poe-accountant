@@ -3,7 +3,7 @@
     "compilerOptions": {
         "composite": true
     },
-    "include": ["./src/**/*"],
+    "include": ["./src/**/*", "test/test-setup.ts"],
     "exclude": [
         "./src/**/*.test.ts",
         "./src/**/*.mock.ts"

@@ -12,9 +12,6 @@ includes:
   infrastructure:terraform:
     taskfile: ./Taskfile.infrastructure.terraform.yml
     dir: .
-  infrastructure:k8s:
-    taskfile: ./Taskfile.infrastructure.k8s.yml
-    dir: .
   docker:
     taskfile: ./Taskfile.docker.yml
     dir: .

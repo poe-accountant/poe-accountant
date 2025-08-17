@@ -42,11 +42,6 @@ output "postgres_password" {
   sensitive   = true
 }
 
-output "postgres_urn" {
-  description = "PostgreSQL database URN"
-  value       = digitalocean_database_cluster.postgres.urn
-}
-
 output "postgres_name" {
   description = "PostgreSQL database cluster name"
   value       = digitalocean_database_cluster.postgres.name
@@ -55,4 +50,9 @@ output "postgres_name" {
 output "database_name" {
   description = "Application database name"
   value       = digitalocean_database_db.app_database.name
+}
+
+output "cluster_urn" {
+  description = "PostgreSQL database cluster URN (alias for consistency)"
+  value       = digitalocean_database_cluster.postgres.urn
 }

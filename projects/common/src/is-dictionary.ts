@@ -13,7 +13,8 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import 'reflect-metadata';
+
+import type {} from "reflect-metadata";
 
 interface DictionaryWrapperInterface {
   field: unknown;

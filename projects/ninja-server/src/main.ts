@@ -1,10 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { NinjaModule } from './ninja/ninja.module.js';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { AppModule } from './app.module.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(NinjaModule);
+  const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
     .setTitle('Ninja API')

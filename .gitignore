@@ -23,3 +23,6 @@ projects/common/docs
 .kube/
 
 .yarn
+
+terraform.tfstate
+terraform.tfstate.backup

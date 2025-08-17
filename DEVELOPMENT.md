@@ -86,6 +86,62 @@ eval "$(direnv hook zsh)"   # For zsh
 
 Then restart your shell or run `source ~/.bashrc` (or your shell config file).
 
+## Installing Docker Desktop
+
+<details>
+<summary><strong>Linux</strong></summary>
+
+Follow the official Docker installation guide for your Linux distribution:
+https://docs.docker.com/engine/install/
+
+After installation, add your user to the docker group:
+```bash
+sudo usermod -aG docker $USER
+```
+
+Log out and log back in for group changes to take effect.
+
+</details>
+
+<details>
+<summary><strong>macOS</strong></summary>
+
+```bash
+brew install --cask docker
+```
+
+</details>
+
+<details>
+<summary><strong>Windows</strong></summary>
+
+```powershell
+# Download Docker Desktop for Windows from:
+# https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe
+
+# Or install via winget
+winget install Docker.DockerDesktop
+```
+
+</details>
+
+## Enabling Kubernetes in Docker Desktop
+
+After installing Docker Desktop:
+
+1. **Open Docker Desktop**
+2. **Go to Settings/Preferences**
+3. **Navigate to Kubernetes tab**
+4. **Check "Enable Kubernetes"**
+5. **Click "Apply & Restart"**
+
+Verify Kubernetes is running:
+
+```bash
+kubectl cluster-info
+kubectl get nodes
+```
+
 ## Using the Development Environment
 
 1. **Navigate to the project directory**:

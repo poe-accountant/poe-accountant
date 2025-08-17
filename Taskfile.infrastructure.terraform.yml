@@ -2,7 +2,6 @@ version: '3'
 
 vars:
   TERRAFORM_DIR: ./infrastructure/terraform
-  TFVARS_FILE: terraform.tfvars
 
 tasks:
   init:
@@ -22,29 +21,28 @@ tasks:
     dir: "{{.TERRAFORM_DIR}}"
     deps: [validate]
     cmds:
-      - tofu plan -var-file={{.TFVARS_FILE}}
+      - tofu plan
 
   plan:destroy:
     desc: Run Terraform plan for destroy to see what will be destroyed
     dir: "{{.TERRAFORM_DIR}}"
     deps: [validate]
     cmds:
-      - tofu plan -destroy -var-file={{.TFVARS_FILE}}
+      - tofu plan -destroy
 
   apply:
     desc: Apply Terraform changes
     dir: "{{.TERRAFORM_DIR}}"
-    deps: [validate]
-    prompt: Are you sure you want to apply these Terraform changes?
+    deps: [validate, check:token]
     cmds:
-      - tofu apply -var-file={{.TFVARS_FILE}}
+      - tofu apply
 
   apply:auto:
     desc: Apply Terraform changes without interactive approval
     dir: "{{.TERRAFORM_DIR}}"
-    deps: [validate]
+    deps: [validate, check:token]
     cmds:
-      - tofu apply -auto-approve -var-file={{.TFVARS_FILE}}
+      - tofu apply -auto-approve
 
   destroy:
     desc: Destroy Terraform-managed infrastructure
@@ -52,20 +50,33 @@ tasks:
     deps: [validate]
     prompt: Are you sure you want to DESTROY all Terraform-managed infrastructure?
     cmds:
-      - tofu destroy -var-file={{.TFVARS_FILE}}
+      - tofu destroy
 
   destroy:auto:
     desc: Destroy Terraform-managed infrastructure without interactive approval
     dir: "{{.TERRAFORM_DIR}}"
     deps: [validate]
     cmds:
-      - tofu destroy -auto-approve -var-file={{.TFVARS_FILE}}
+      - tofu destroy -auto-approve
 
   validate:
     desc: Validate Terraform configuration files
     dir: "{{.TERRAFORM_DIR}}"
     cmds:
       - tofu validate
+
+  check:token:
+    desc: Check if DigitalOcean token is configured
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - |
+        if [ -z "$DIGITALOCEAN_TOKEN" ]; then
+          echo "❌ Error: DigitalOcean token not found!"
+          echo "Please set one of the following:"
+          echo "  1. Environment variable: export DIGITALOCEAN_TOKEN=\"your-token\""
+          exit 1
+        fi
+        echo "✅ DigitalOcean token found and configured correctly"
 
   format:
     desc: Format Terraform configuration files
@@ -127,15 +138,6 @@ tasks:
     cmds:
       - tofu workspace select {{.CLI_ARGS}}
 
-  setup:
-    desc: Initial setup - copy example tfvars and initialize
-    dir: "{{.TERRAFORM_DIR}}"
-    cmds:
-      - cmd: cp terraform.tfvars.example {{.TFVARS_FILE}}
-        ignore_error: true
-      - echo "Please edit {{.TFVARS_FILE}} with your actual values before running other tasks"
-      - tofu init
-
   clean:
     desc: Clean Terraform cache and temporary files
     dir: "{{.TERRAFORM_DIR}}"
@@ -155,7 +157,7 @@ tasks:
     desc: Refresh Terraform state to match real infrastructure
     dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu refresh -var-file={{.TFVARS_FILE}}
+      - tofu refresh
 
   import:
     desc: "Import existing resource into Terraform state (usage: task terraform:import -- <resource_type.name> <resource_id>)"

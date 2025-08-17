@@ -6,7 +6,8 @@
     },
     "include": [
         "./**/*.test.ts",
-        "./**/*.mock.ts"
+        "./**/*.mock.ts",
+        "./test/**/*.ts"
     ],
     "references": [
         { "path": "./tsconfig.lib.json" },

@@ -1,3 +1,13 @@
+output "project_id" {
+  description = "ID of the DigitalOcean project"
+  value       = module.project.project_id
+}
+
+output "project_name" {
+  description = "Name of the DigitalOcean project"
+  value       = module.project.project_name
+}
+
 output "cluster_id" {
   description = "ID of the Kubernetes cluster"
   value       = module.k8s.cluster_id
@@ -19,30 +29,30 @@ output "kubeconfig" {
   sensitive   = true
 }
 
-output "redis_id" {
-  description = "ID of the Redis database cluster"
-  value       = module.redis.redis_id
+output "valkey_id" {
+  description = "ID of the Valkey database cluster"
+  value       = module.valkey.valkey_id
 }
 
-output "redis_host" {
-  description = "Redis database host"
-  value       = module.redis.redis_host
+output "valkey_host" {
+  description = "Valkey database host"
+  value       = module.valkey.valkey_host
 }
 
-output "redis_port" {
-  description = "Redis database port"
-  value       = module.redis.redis_port
+output "valkey_port" {
+  description = "Valkey database port"
+  value       = module.valkey.valkey_port
 }
 
-output "redis_uri" {
-  description = "Redis connection URI"
-  value       = module.redis.redis_uri
+output "valkey_uri" {
+  description = "Valkey connection URI"
+  value       = module.valkey.valkey_uri
   sensitive   = true
 }
 
-output "redis_password" {
-  description = "Redis database password"
-  value       = module.redis.redis_password
+output "valkey_password" {
+  description = "Valkey database password"
+  value       = module.valkey.valkey_password
   sensitive   = true
 }
 
@@ -81,4 +91,24 @@ output "postgres_password" {
 output "database_name" {
   description = "Application database name"
   value       = module.postgres.database_name
+}
+
+output "registry_id" {
+  description = "ID of the container registry"
+  value       = module.registry.registry_id
+}
+
+output "registry_name" {
+  description = "Name of the container registry"
+  value       = module.registry.registry_name
+}
+
+output "registry_endpoint" {
+  description = "Endpoint URL of the container registry"
+  value       = module.registry.registry_endpoint
+}
+
+output "registry_server_url" {
+  description = "Server URL of the container registry"
+  value       = module.registry.registry_server_url
 }

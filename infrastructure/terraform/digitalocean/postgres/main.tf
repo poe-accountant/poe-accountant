@@ -1,12 +1,3 @@
-terraform {
-  required_providers {
-    digitalocean = {
-      source  = "digitalocean/digitalocean"
-      version = "~> 2.0"
-    }
-  }
-}
-
 resource "digitalocean_database_cluster" "postgres" {
   name       = var.postgres_name != null ? var.postgres_name : "${var.cluster_name}-postgres"
   engine     = "pg"

@@ -5,11 +5,13 @@ ARG WORKSPACE=ninja-server
 FROM node:${NODE_VERSION} AS base
 RUN corepack enable && corepack prepare yarn@stable --activate
 
+USER node
+WORKDIR /home/node/app
+
+
 # Build all projects
 FROM base AS base-fs
-WORKDIR /app
-
-COPY . .
+COPY --chown=node:node . .
 
 # Dev dependencies
 FROM base-fs AS dev-fs
@@ -25,15 +27,16 @@ RUN yarn test
 # Prod dependencies
 FROM base-fs AS prod-fs
 ENV NODE_ENV=production
-RUN yarn install
-RUN --mount=type=bind,from=build,source=/app,target=/app-build \
-  cd /app-build && cp -r --parents projects/*/dist /app
+RUN yarn workspaces focus --all --production
+
+RUN --mount=type=bind,from=build,source=/home/node/app,target=/app-build \
+  cd /app-build && cp -r --parents projects/*/dist /home/node/app
 
 # Final Build
 FROM prod-fs AS final
 ARG WORKSPACE
 
-WORKDIR /app/projects/${WORKSPACE}
+WORKDIR /home/node/app/projects/${WORKSPACE}
 
 CMD [ "yarn", "start:prod" ]
 

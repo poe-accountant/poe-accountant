@@ -1,20 +1,19 @@
-terraform {
-  required_providers {
-    digitalocean = {
-      source  = "digitalocean/digitalocean"
-      version = "~> 2.0"
-    }
-  }
-}
-
-provider "digitalocean" {
-  token = var.do_token
-}
-
 locals {
   cluster_name  = var.cluster_name != null ? var.cluster_name : "${var.project_name}-cluster"
   database_name = var.database_name != null ? var.database_name : replace(var.project_name, "-", "_")
   tags         = var.tags != null ? var.tags : [var.project_name, "terraform"]
+}
+
+module "project" {
+  source = "./digitalocean/project"
+
+  project_name        = var.project_name
+  project_description = var.project_description
+  resource_urns = [
+    module.k8s.cluster_urn,
+    module.valkey.cluster_urn,
+    module.postgres.cluster_urn,
+  ]
 }
 
 module "k8s" {
@@ -30,15 +29,15 @@ module "k8s" {
   tags               = local.tags
 }
 
-module "redis" {
-  source = "./digitalocean/redis"
+module "valkey" {
+  source = "./digitalocean/valkey"
 
   cluster_name      = local.cluster_name
   region            = var.region
-  redis_name        = var.redis_name
-  redis_version     = var.redis_version
-  redis_size        = var.redis_size
-  redis_node_count  = var.redis_node_count
+  valkey_name       = var.valkey_name
+  valkey_version    = var.valkey_version
+  valkey_size       = var.valkey_size
+  valkey_node_count = var.valkey_node_count
   tags              = local.tags
 }
 
@@ -53,4 +52,13 @@ module "postgres" {
   postgres_node_count  = var.postgres_node_count
   database_name        = local.database_name
   tags                 = local.tags
+}
+
+module "registry" {
+  source = "./digitalocean/registry"
+
+  cluster_name                = local.cluster_name
+  region                     = var.region
+  registry_name              = var.registry_name
+  registry_subscription_tier = var.registry_subscription_tier
 }

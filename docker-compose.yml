@@ -17,24 +17,24 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:${LOCAL_REDIS_VERSION}
-    container_name: redis
+  valkey:
+    image: valkey/valkey:${LOCAL_VALKEY_VERSION}
+    container_name: valkey
     ports:
-      - "${LOCAL_REDIS_PORT}:6379"
+      - "${LOCAL_VALKEY_PORT}:6379"
     volumes:
-      - redis-data:/data
-    command: redis-server --appendonly yes
+      - valkey-data:/data
+    command: valkey-server --appendonly yes
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
 
 volumes:
   postgres-data:
-  redis-data:
+  valkey-data:
 
 networks:
   default:

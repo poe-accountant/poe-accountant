@@ -1,0 +1,54 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "poe-accountant.fullname" . }}-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "poe-accountant.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    {{- if .Values.ingress.tls.enabled }}
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    {{- end }}
+spec:
+  ingressClassName: nginx
+  {{- if and .Values.ingress.tls.enabled .Values.ingress.tls.secretName }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+        {{- $hasEnabledServices := false }}
+        {{- range $serviceName, $serviceConfig := .Values.services }}
+          {{- if and $serviceConfig.enabled $serviceConfig.ingress $serviceConfig.ingress.path }}
+            {{- $hasEnabledServices = true }}
+            {{- $httpPort := "" }}
+            {{- $targetPortName := $serviceConfig.ingress.port | default "http" }}
+            {{- range $port := $serviceConfig.ports }}
+              {{- if eq $port.name $targetPortName }}
+                {{- $httpPort = ($port.servicePort | default $port.containerPort) }}
+              {{- end }}
+            {{- end }}
+          - path: {{ $serviceConfig.ingress.path }}/?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ $serviceName }}-service
+                port:
+                  number: {{ $httpPort }}
+          {{- end }}
+        {{- end }}
+        {{- if not $hasEnabledServices }}
+          # Default path when no services are configured
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: default-backend
+                port:
+                  number: 80
+        {{- end }}

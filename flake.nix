@@ -22,7 +22,11 @@
             go-task
             opentofu
             kubectl
+            kubernetes-helm
             bash
+            jq
+            redis
+            postgresql
           ];
 
           nativeBuildInputs = with pkgs; [
@@ -37,6 +41,9 @@
             echo "Task version: $(task --version)"
             echo "Terraform version: $(tofu --version | head -n1)"
             echo "kubectl version: $(kubectl version --client --short 2>/dev/null || echo 'Not connected to cluster')"
+            echo "Helm version: $(helm version --short 2>/dev/null || echo 'Helm available')"
+            echo "Redis version: $(redis-cli --version)"
+            echo "PostgreSQL version: $(psql --version)"
           '';
         };
       });
