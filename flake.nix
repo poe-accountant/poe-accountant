@@ -27,6 +27,7 @@
             jq
             redis
             postgresql
+            doctl
           ];
 
           nativeBuildInputs = with pkgs; [

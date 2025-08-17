@@ -7,16 +7,16 @@ metadata:
     {{- include "poe-accountant.labels" . | nindent 4 }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
-    {{- if .Values.ingress.tls.enabled }}
+    {{- if .Values.ingress.tlsSecretName }}
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     {{- end }}
 spec:
   ingressClassName: nginx
-  {{- if and .Values.ingress.tls.enabled .Values.ingress.tls.secretName }}
+  {{- if .Values.ingress.tlsSecretName }}
   tls:
     - hosts:
         - {{ .Values.ingress.host }}
-      secretName: {{ .Values.ingress.tls.secretName }}
+      secretName: {{ .Values.ingress.tlsSecretName }}
   {{- end }}
   rules:
     - host: {{ .Values.ingress.host }}

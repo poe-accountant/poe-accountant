@@ -1,7 +1,16 @@
 locals {
-  cluster_name  = var.cluster_name != null ? var.cluster_name : "${var.project_name}-cluster"
-  database_name = var.database_name != null ? var.database_name : replace(var.project_name, "-", "_")
-  tags         = var.tags != null ? var.tags : [var.project_name, "terraform"]
+  cluster_name         = var.cluster_name != null ? var.cluster_name : "${var.project_name}-cluster"
+  database_name        = var.database_name != null ? var.database_name : replace(var.project_name, "-", "_")
+  tags                 = var.tags != null ? var.tags : [var.project_name, "terraform"]
+  full_api_domain_name = "${var.cloudflare_api_subdomain}.${var.cloudflare_zone_name}"
+}
+
+# SSL prep
+module "acme" {
+  source = "./cloudflare/acme"
+
+  email_address = var.email_address
+  domain_names  = [local.full_api_domain_name]
 }
 
 module "project" {
@@ -61,4 +70,75 @@ module "registry" {
   region                     = var.region
   registry_name              = var.registry_name
   registry_subscription_tier = var.registry_subscription_tier
+}
+
+module "proxy_list" {
+  source = "./cloudflare/proxies"
+}
+
+# Deploy the poe-accountant Helm chart
+module "helm" {
+  source = "./helm"
+
+  project_name = var.project_name
+  ingress_host = local.full_api_domain_name
+
+  # Docker registry configuration
+  docker_registry_url = module.registry.registry_endpoint
+  docker_credentials  = module.registry.registry_credentials
+
+  # Database configuration
+  database_host     = module.postgres.postgres_host
+  database_port     = module.postgres.postgres_port
+  database_name     = module.postgres.database_name
+  database_username = module.postgres.postgres_username
+  database_password = module.postgres.postgres_password
+
+  # Redis/Valkey configuration
+  redis_host     = module.valkey.valkey_host
+  redis_port     = module.valkey.valkey_port
+  redis_password = module.valkey.valkey_password
+
+  cert     = module.acme.cert_pem
+  cert_key = module.acme.key_pem
+
+  proxy_cidr = module.proxy_list.proxy_list
+
+  depends_on = [
+    module.k8s,
+    module.postgres,
+    module.valkey,
+    module.registry,
+    module.acme,
+    module.proxy_list
+  ]
+}
+
+# Cloudflare DNS
+module "cloudflare_dns" {
+  source = "./cloudflare/dns"
+
+  zone_id   = var.cloudflare_zone_id
+  zone_name = var.cloudflare_zone_name
+
+  records = [
+    {
+      # Backend API domain IPv4
+      name    = var.cloudflare_api_subdomain
+      type    = "A"
+      value   = module.helm.ingress_ipv4_address
+      ttl     = 1
+      proxied = true
+      comment = "${var.project_name} Backend API ingress"
+    },
+    {
+      # Backend API domain IPv6
+      name    = var.cloudflare_api_subdomain
+      type    = "AAAA"
+      value   = module.helm.ingress_ipv6_address
+      ttl     = 1
+      proxied = true
+      comment = "${var.project_name} Backend API ingress"
+    }
+  ]
 }

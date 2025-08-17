@@ -2,6 +2,7 @@ version: '3'
 
 vars:
   TERRAFORM_DIR: ./infrastructure/terraform
+  PROJECT_NAME: poe-accountant
 
 tasks:
   init:
@@ -41,6 +42,13 @@ tasks:
     desc: Apply Terraform changes without interactive approval
     dir: "{{.TERRAFORM_DIR}}"
     deps: [validate, check:token]
+    cmds:
+      - tofu apply -auto-approve
+
+  redeploy:helm:
+    desc: Force redeploy Helm release by tainting and applying
+    dir: "{{.TERRAFORM_DIR}}"
+    deps: [taint:helm, validate, check:token]
     cmds:
       - tofu apply -auto-approve
 
@@ -108,6 +116,18 @@ tasks:
     cmds:
       - tofu state show {{.CLI_ARGS}}
 
+  taint:helm:
+    desc: Taint the Helm release to force recreation on next apply
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu taint module.helm.helm_release.poe_accountant
+
+  taint:
+    desc: "Taint a specific resource (usage: task terraform:taint -- <resource_name>)"
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - tofu taint {{.CLI_ARGS}}
+
   output:
     desc: Show Terraform outputs
     dir: "{{.TERRAFORM_DIR}}"
@@ -119,6 +139,46 @@ tasks:
     dir: "{{.TERRAFORM_DIR}}"
     cmds:
       - tofu output -json
+
+  kubectl:setup:
+    desc: Configure kubectl to connect to the Kubernetes cluster using Terraform outputs
+    dir: "{{.TERRAFORM_DIR}}"
+    cmds:
+      - |
+        echo "Setting up kubectl connection to Kubernetes cluster..."
+        
+        # Get cluster info from Terraform outputs
+        CLUSTER_ENDPOINT=$(tofu output -raw cluster_endpoint)
+        CLUSTER_TOKEN=$(tofu output -raw cluster_token)
+        CLUSTER_CA_CERT=$(tofu output -raw cluster_ca_certificate)
+        CLUSTER_NAME="{{.PROJECT_NAME}}-cluster"
+        
+        # Create temporary file for CA certificate
+        CA_CERT_FILE=$(mktemp)
+        echo "$CLUSTER_CA_CERT" | base64 -d > "$CA_CERT_FILE"
+        
+        # Create kubeconfig context
+        kubectl config set-cluster $CLUSTER_NAME \
+          --server="$CLUSTER_ENDPOINT" \
+          --certificate-authority="$CA_CERT_FILE" \
+          --embed-certs=true
+        
+        kubectl config set-credentials $CLUSTER_NAME-admin \
+          --token="$CLUSTER_TOKEN"
+        
+        kubectl config set-context $CLUSTER_NAME \
+          --cluster=$CLUSTER_NAME \
+          --user=$CLUSTER_NAME-admin
+        
+        kubectl config use-context $CLUSTER_NAME
+        
+        # Clean up temporary file
+        rm -f "$CA_CERT_FILE"
+        
+        echo "✅ kubectl configured successfully!"
+        echo "Current context: $(kubectl config current-context)"
+        echo "Cluster info:"
+        kubectl cluster-info
 
   workspace:list:
     desc: List Terraform workspaces

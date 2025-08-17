@@ -1,11 +1,9 @@
 # Global configuration
-global:
-  namespace: poe-accountant
+# global:
+#   namespace: poe-accountant
 
 # Docker registry configuration
 # Set in command line
-# docker:
-#   registry: ""  # Leave empty for local Docker Desktop registry, or set to your registry (e.g., docker.io, ghcr.io, localhost:5000)
 
 # Services configuration - each service defines its ingress path
 services:
@@ -47,34 +45,28 @@ services:
           - ALL
 
 # Ingress configuration
-ingress:
+ingress: {}
   # Main host configuration
-  host: localhost
+#   host: localhost
   
   # TLS configuration (optional)
-  tls:
-    enabled: false
-    secretName: poe-accountant-tls
+  # tlsSecretName: site-tls
 
 # NGINX Ingress Controller configuration
 ingress-nginx:
   enabled: true
   controller:
-    service:
-      type: NodePort
-      nodePorts:
-        http: 30080
-        https: 30443
-    # Configure for local development
     config:
-      use-forwarded-headers: "true"
-      # Allow access without host header for testing
-      enable-real-ip: "true"
-    # Allow scheduling on control plane for local development
-    tolerations:
-      - key: node-role.kubernetes.io/control-plane
-        operator: Equal
-        effect: NoSchedule
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        effect: NoSchedule
+      use-proxy-protocol: "true"            # DO LB → NGINX over PROXY; safe to keep on
+      use-forwarded-headers: "true"         # trust CF/HTTP proxy headers
+      real-ip-header: "CF-Connecting-IP"    # take the visitor IP from Cloudflare’s header
+      forwarded-for-header: "CF-Connecting-IP"
+      # proxy-real-ip-cidr: ${var.proxy_cidr}
+
+    service:
+      type: LoadBalancer
+      annotations:
+        service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"
+        service.beta.kubernetes.io/do-loadbalancer-type: "REGIONAL" # for ipv6 support
+        # nginx.ingress.kubernetes.io/whitelist-source-range: ${var.proxy_cidr}
+    # Configure for local development

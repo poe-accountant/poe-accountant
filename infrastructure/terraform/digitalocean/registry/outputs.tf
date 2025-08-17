@@ -17,3 +17,9 @@ output "registry_server_url" {
   description = "Server URL of the container registry"
   value       = digitalocean_container_registry.main.server_url
 }
+
+output "registry_credentials" {
+  description = "Credentials for registry authentication"
+  value       = digitalocean_container_registry_docker_credentials.creds.docker_credentials
+  sensitive   = true
+}

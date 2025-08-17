@@ -29,6 +29,38 @@ output "kubeconfig" {
   sensitive   = true
 }
 
+output "cluster_name" {
+  description = "Name of the Kubernetes cluster"
+  value       = module.k8s.cluster_name
+}
+
+output "cluster_status" {
+  description = "Status of the Kubernetes cluster"
+  value       = module.k8s.cluster_status
+}
+
+output "cluster_version" {
+  description = "Version of the Kubernetes cluster"
+  value       = module.k8s.cluster_version
+}
+
+output "cluster_ip" {
+  description = "IP address of the Kubernetes cluster"
+  value       = module.k8s.cluster_ip
+}
+
+output "cluster_token" {
+  description = "Token for the Kubernetes cluster"
+  value       = module.k8s.cluster_token
+  sensitive   = true
+}
+
+output "cluster_ca_certificate" {
+  description = "CA certificate for the Kubernetes cluster"
+  value       = module.k8s.cluster_ca_certificate
+  sensitive   = true
+}
+
 output "valkey_id" {
   description = "ID of the Valkey database cluster"
   value       = module.valkey.valkey_id
@@ -111,4 +143,14 @@ output "registry_endpoint" {
 output "registry_server_url" {
   description = "Server URL of the container registry"
   value       = module.registry.registry_server_url
+}
+
+output "ingress_ipv4" {
+  description = "Ingress IPv4"
+  value = module.helm.ingress_ipv4_address
+}
+
+output "ingress_ipv6" {
+  description = "Ingress IPv6"
+  value = module.helm.ingress_ipv6_address
 }

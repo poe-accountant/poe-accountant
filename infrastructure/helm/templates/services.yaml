@@ -21,9 +21,20 @@ spec:
         app: {{ $serviceName }}
         {{- include "poe-accountant.selectorLabels" $ | nindent 8 }}
     spec:
+      {{- if $.Values.docker.credentialSecretName }}
+      imagePullSecrets:
+      - name: {{ $.Values.docker.credentialSecretName }}
+      {{- end }}
       containers:
       - name: {{ $serviceName }}
-        image: {{ if $.Values.docker.registry }}{{ $.Values.docker.registry }}/{{ $serviceConfig.image.repository }}:{{ $serviceConfig.image.tag }}{{ else }}{{ $serviceConfig.image.repository }}:{{ $serviceConfig.image.tag }}{{ end }}
+        {{- /* Avoid duplicating registry if already included in repository */}}
+        {{- $repo := $serviceConfig.image.repository }}
+        {{- $reg := $.Values.docker.registry }}
+        {{- if and $reg (not (hasPrefix (printf "%s/" $reg) $repo)) }}
+        image: {{ $reg }}/{{ $repo }}:{{ $serviceConfig.image.tag }}
+        {{- else }}
+        image: {{ $repo }}:{{ $serviceConfig.image.tag }}
+        {{- end }}
         imagePullPolicy: {{ $serviceConfig.image.pullPolicy | default "IfNotPresent" }}
         {{- if $serviceConfig.ports }}
         ports:
@@ -39,6 +50,11 @@ spec:
         - name: {{ $key }}
           value: {{ $value | quote }}
         {{- end }}
+        {{- end }}
+        {{- if $serviceConfig.envSecretName }}
+        envFrom:
+          - secretRef:
+              name: {{ $serviceConfig.envSecretName }}
         {{- end }}
         {{- if $serviceConfig.resources }}
         resources:

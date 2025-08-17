@@ -123,3 +123,31 @@ variable "registry_subscription_tier" {
   type        = string
   default     = "basic"  # Basic tier is $5/month
 }
+
+# Cloudflare DNS variables
+variable "cloudflare_zone_id" {
+  description = "Cloudflare zone ID for DNS records"
+  type        = string
+  default     = null
+}
+
+variable "cloudflare_zone_name" {
+  description = "Cloudflare zone name (domain) for DNS records"
+  type        = string
+}
+
+variable "cloudflare_api_subdomain" {
+  description = "Subdomain for the Application API"
+  type        = string
+}
+
+variable "do_token" {
+  description = "DigitalOcean token"
+  type        = string
+  sensitive   = true
+}
+
+variable "email_address" {
+  description = "Email address for ACME registration"
+  type        = string
+}

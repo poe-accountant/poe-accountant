@@ -30,6 +30,7 @@ services:
     env:
       NODE_ENV: production
       PORT: "3000"
+    # envSecretName: ninja-server-secret
     resources:
       requests:
         cpu: 100m
@@ -51,9 +52,7 @@ ingress:
   host: localhost
   
   # TLS configuration (optional)
-  tls:
-    enabled: false
-    secretName: poe-accountant-tls
+  # tlsSecretName: site-tls
 
 # NGINX Ingress Controller configuration
 ingress-nginx:
