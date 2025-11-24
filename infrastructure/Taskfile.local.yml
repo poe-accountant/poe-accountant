@@ -10,12 +10,10 @@ tasks:
       - echo ""
 
   setup:
+    dir: '{{.TASKFILE_DIR}}'
     desc: Setup connection to existing local infrastructure
     cmds:
-      - echo "🔧 Setting up connection to local infrastructure..."
-      - echo ""
-      - ./scripts/setup-kubectl-local.sh
-      - echo ""
+      - ./scripts/configure-local-kubectl.sh
 
   start:
     desc: Start local Redis and PostgreSQL containers

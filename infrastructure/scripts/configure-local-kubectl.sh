@@ -2,7 +2,7 @@
 
 # Script to configure kubectl for local Kubernetes clusters
 # This script detects and configures kubectl for Docker Desktop or minikube
-# Usage: setup-kubectl-local.sh
+# Usage: configure-kubectl-local.sh
 
 set -e
 
@@ -80,10 +80,10 @@ setup_docker_desktop() {
     
     echo "✅ Successfully configured kubectl for Docker Desktop!"
     
-    # Use setup-kubectl.sh to rename context to 'local' with copied authentication
-    echo "🏷️  Setting up 'local' context using setup-kubectl.sh..."
+    # Use configure-kubectl.sh to rename context to 'local' with copied authentication
+    echo "🏷️  Setting up 'local' context using configure-kubectl.sh..."
     DOCKER_ENDPOINT=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-    ./scripts/setup-kubectl.sh "docker-desktop" "$DOCKER_ENDPOINT" "local" "docker-desktop"
+    ./scripts/configure-kubectl.sh "docker-desktop" "$DOCKER_ENDPOINT" "local" "docker-desktop"
     
     # Inform about the local kubeconfig setup
     echo "📍 Local kubeconfig location: $KUBECONFIG"
@@ -119,10 +119,10 @@ setup_minikube() {
     
     echo "✅ Successfully configured kubectl for minikube!"
     
-    # Use setup-kubectl.sh to rename context to 'local' with copied authentication
-    echo "🏷️  Setting up 'local' context using setup-kubectl.sh..."
+    # Use configure-kubectl.sh to rename context to 'local' with copied authentication
+    echo "🏷️  Setting up 'local' context using configure-kubectl.sh..."
     MINIKUBE_ENDPOINT=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-    ./scripts/setup-kubectl.sh "minikube" "$MINIKUBE_ENDPOINT" "local" "minikube"
+    ./scripts/configure-kubectl.sh "minikube" "$MINIKUBE_ENDPOINT" "local" "minikube"
     
     echo "📍 Local kubeconfig location: $KUBECONFIG"
     return 0
@@ -171,10 +171,10 @@ setup_kind() {
     
     echo "✅ Successfully configured kubectl for kind cluster: $CLUSTER_NAME!"
     
-    # Use setup-kubectl.sh to rename context to 'local' with copied authentication
-    echo "🏷️  Setting up 'local' context using setup-kubectl.sh..."
+    # Use configure-kubectl.sh to rename context to 'local' with copied authentication
+    echo "🏷️  Setting up 'local' context using configure-kubectl.sh..."
     KIND_ENDPOINT=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-    ./scripts/setup-kubectl.sh "kind-$CLUSTER_NAME" "$KIND_ENDPOINT" "local" "kind-$CLUSTER_NAME"
+    ./scripts/configure-kubectl.sh "kind-$CLUSTER_NAME" "$KIND_ENDPOINT" "local" "kind-$CLUSTER_NAME"
     
     echo "📍 Local kubeconfig location: $KUBECONFIG"
     return 0

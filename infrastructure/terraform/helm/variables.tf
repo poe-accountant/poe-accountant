@@ -15,9 +15,9 @@ variable "values_file_path" {
   default     = "../helm/values.remote.yaml"
 }
 
-variable "ingress_host" {
-  description = "Host for the ingress"
-  type        = string
+variable "ninja_host_names" {
+  description = "Host names to listen for the Ninja Service"
+  type        = list(string)
 }
 
 variable "docker_registry_url" {

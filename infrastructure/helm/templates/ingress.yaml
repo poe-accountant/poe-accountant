@@ -15,40 +15,35 @@ spec:
   {{- if .Values.ingress.tlsSecretName }}
   tls:
     - hosts:
-        - {{ .Values.ingress.host }}
+        {{- range .Values.ingress.hosts }}
+        - {{ . }}
+        {{- end }}
       secretName: {{ .Values.ingress.tlsSecretName }}
   {{- end }}
   rules:
-    - host: {{ .Values.ingress.host }}
+    {{- $services := .Values.services }}
+    {{- range $serviceName, $serviceConfig := $services }}
+    {{- if and $serviceConfig.enabled $serviceConfig.ingress }}
+    {{- $httpPort := "" }}
+    {{- $targetPortName := $serviceConfig.ingress.port | default "http" }}
+    {{- range $port := $serviceConfig.ports }}
+      {{- if eq $port.name $targetPortName }}
+        {{- $httpPort = ($port.servicePort | default $port.containerPort) }}
+      {{- end }}
+    {{- end }}
+    {{- if $httpPort }}
+    {{- range ($serviceConfig.ingress.hosts | default $.Values.ingress.hosts) }}
+    - host: {{ . }}
       http:
         paths:
-        {{- $hasEnabledServices := false }}
-        {{- range $serviceName, $serviceConfig := .Values.services }}
-          {{- if and $serviceConfig.enabled $serviceConfig.ingress $serviceConfig.ingress.path }}
-            {{- $hasEnabledServices = true }}
-            {{- $httpPort := "" }}
-            {{- $targetPortName := $serviceConfig.ingress.port | default "http" }}
-            {{- range $port := $serviceConfig.ports }}
-              {{- if eq $port.name $targetPortName }}
-                {{- $httpPort = ($port.servicePort | default $port.containerPort) }}
-              {{- end }}
-            {{- end }}
-          - path: {{ $serviceConfig.ingress.path }}/?(.*)
+          - path: {{ $serviceConfig.ingress.path | default "" }}/?(.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: {{ $serviceName }}-service
                 port:
                   number: {{ $httpPort }}
-          {{- end }}
-        {{- end }}
-        {{- if not $hasEnabledServices }}
-          # Default path when no services are configured
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: default-backend
-                port:
-                  number: 80
-        {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}

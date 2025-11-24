@@ -13,3 +13,7 @@ We welcome contributions to Poe Accountant! Please see our [Contributing Guide](
 ## License
 
 This project is licensed under the Mozilla Public License 2.0. See [LICENSE.md](LICENSE.md) for the full license.
+
+
+## Infrastructure
+See [INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)

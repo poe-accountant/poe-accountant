@@ -49,7 +49,8 @@ services:
 # Ingress configuration
 ingress:
   # Main host configuration
-  host: localhost
+  hosts:
+    - localhost
   
   # TLS configuration (optional)
   # tlsSecretName: site-tls

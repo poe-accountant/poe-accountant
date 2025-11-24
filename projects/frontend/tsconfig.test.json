@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vitest/globals"],
+      "composite": true
+  },
+  "include": [
+    "./src/**/*.test.tsx?",
+    "./src/**/*.mock.tsx?"
+  ],
+  "references": [
+    { "path": "./tsconfig.lib.json" }
+  ]
+}

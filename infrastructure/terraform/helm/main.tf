@@ -64,6 +64,7 @@ resource "helm_release" "poe_accountant" {
   depends_on = [
     kubernetes_namespace.project_namespace,
     kubernetes_secret.docker_registry,
+    kubernetes_secret.ninja_server_secret,
     kubernetes_secret.tls_cert
   ]
 
@@ -82,11 +83,6 @@ resource "helm_release" "poe_accountant" {
   set {
     name  = "global.namespace"
     value = var.project_name
-  }
-
-  set {
-    name  = "ingress.host"
-    value = var.ingress_host
   }
   
   # Docker registry configuration
@@ -108,6 +104,16 @@ resource "helm_release" "poe_accountant" {
   set {
     name  = "services.ninja-server.envSecretName"
     value = kubernetes_secret.ninja_server_secret.metadata[0].name
+  }
+
+  set {
+    name  = "services.ninja-server.hosts"
+    value = "{${join("\\,", var.ninja_host_names)}}"
+  }
+
+  set {
+    name  = "ingress.hosts"
+    value = "{${join("\\,", var.ninja_host_names)}}"
   }
   
   # Database configuration

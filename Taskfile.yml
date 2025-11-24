@@ -4,13 +4,13 @@ dotenv: ['.env.local', '.env']
 
 includes:
   infrastructure:remote:
-    taskfile: ./Taskfile.infrastructure.remote.yml
+    taskfile: ./infrastructure/Taskfile.remote.yml
     dir: .
   infrastructure:local:
-    taskfile: ./Taskfile.infrastructure.local.yml
+    taskfile: ./infrastructure/Taskfile.local.yml
     dir: .
-  infrastructure:terraform:
-    taskfile: ./Taskfile.infrastructure.terraform.yml
+  remote:terraform:
+    taskfile: ./infrastructure/terraform/Taskfile.yml
     dir: .
   docker:
     taskfile: ./Taskfile.docker.yml

@@ -24,7 +24,6 @@ services:
         servicePort: 80  # Optional: defaults to containerPort
     # Service configuration
     ingress:
-      path: /api
       healthCheck: /health
     env:
       NODE_ENV: production
@@ -44,14 +43,6 @@ services:
         drop:
           - ALL
 
-# Ingress configuration
-ingress: {}
-  # Main host configuration
-#   host: localhost
-  
-  # TLS configuration (optional)
-  # tlsSecretName: site-tls
-
 # NGINX Ingress Controller configuration
 ingress-nginx:
   enabled: true
@@ -69,4 +60,3 @@ ingress-nginx:
         service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"
         service.beta.kubernetes.io/do-loadbalancer-type: "REGIONAL" # for ipv6 support
         # nginx.ingress.kubernetes.io/whitelist-source-range: ${var.proxy_cidr}
-    # Configure for local development

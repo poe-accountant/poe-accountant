@@ -5,8 +5,8 @@ variable "zone_id" {
 
 variable "records" {
   description = "List of DNS records to create"
-  type = list(object({
-    name     = string
+  type = map(object({
+    name     = optional(string)
     type     = string
     value    = string
     ttl      = optional(number, 3600)
@@ -14,7 +14,6 @@ variable "records" {
     priority = optional(number)
     comment  = optional(string)
   }))
-  default = []
 }
 
 variable "zone_name" {

@@ -28,6 +28,7 @@
             redis
             postgresql
             doctl
+            s3cmd
           ];
 
           nativeBuildInputs = with pkgs; [

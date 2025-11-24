@@ -8,16 +8,20 @@ import { PriceTabResponse } from './price-tab-response.dto.js';
 import { PriceTabResultRequest } from './price-tab-result-request.dto.js';
 import { PriceTabResultResponse } from './price-tab-result-response.dto.js';
 
-export type ApiResultResponseData<T extends ApiEndpoint> =
-  T extends ApiEndpoint.PriceItemRequest
-    ? [PriceItemRequest, PriceItemResponse]
-    : T extends ApiEndpoint.PriceTabRequest
-      ? [PriceTabRequest, PriceTabResponse]
-      : T extends ApiEndpoint.PriceItemResult
-        ? [PriceItemResultRequest, PriceItemResultResponse]
-        : T extends ApiEndpoint.PriceTabResult
-          ? [PriceTabResultRequest, PriceTabResultResponse]
-          : never;
+export const ApiResultResponseTypes = {
+  [ApiEndpoint.PriceItemRequest]: [PriceItemRequest, PriceItemResponse],
+  [ApiEndpoint.PriceTabRequest]: [PriceTabRequest, PriceTabResponse],
+  [ApiEndpoint.PriceItemResult]: [
+    PriceItemResultRequest,
+    PriceItemResultResponse,
+  ],
+  [ApiEndpoint.PriceTabResult]: [PriceTabResultRequest, PriceTabResultResponse],
+} as const;
+
+export type ApiResultResponseData<T extends ApiEndpoint> = [
+  InstanceType<(typeof ApiResultResponseTypes)[T][0]>,
+  InstanceType<(typeof ApiResultResponseTypes)[T][1]>,
+];
 
 export type ApiRequest<T extends ApiEndpoint> = ApiResultResponseData<T>[0];
 

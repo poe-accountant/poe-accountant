@@ -28,6 +28,10 @@ terraform {
       source  = "vancluever/acme"
       version = "~> 2.21"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.7"
+    }
   }
 }
 

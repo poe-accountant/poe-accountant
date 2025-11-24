@@ -18,9 +18,7 @@ locals {
 }
 
 resource "cloudflare_record" "records" {
-  for_each = {
-    for idx, record in var.records : "${record.type}-${record.name}" => record
-  }
+  for_each = var.records
 
   zone_id  = local.zone_id
   name     = each.value.name

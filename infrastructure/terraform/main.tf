@@ -80,8 +80,8 @@ module "proxy_list" {
 module "helm" {
   source = "./helm"
 
-  project_name = var.project_name
-  ingress_host = local.full_api_domain_name
+  project_name     = var.project_name
+  ninja_host_names = [local.full_api_domain_name]
 
   # Docker registry configuration
   docker_registry_url = module.registry.registry_endpoint
@@ -121,8 +121,8 @@ module "cloudflare_dns" {
   zone_id   = var.cloudflare_zone_id
   zone_name = var.cloudflare_zone_name
 
-  records = [
-    {
+  records = {
+    backend_api_ipv4 = {
       # Backend API domain IPv4
       name    = var.cloudflare_api_subdomain
       type    = "A"
@@ -130,8 +130,9 @@ module "cloudflare_dns" {
       ttl     = 1
       proxied = true
       comment = "${var.project_name} Backend API ingress"
-    },
-    {
+    }
+    
+    backend_api_ipv6 = {
       # Backend API domain IPv6
       name    = var.cloudflare_api_subdomain
       type    = "AAAA"
@@ -140,5 +141,5 @@ module "cloudflare_dns" {
       proxied = true
       comment = "${var.project_name} Backend API ingress"
     }
-  ]
+  }
 }
