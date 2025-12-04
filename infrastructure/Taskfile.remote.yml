@@ -1,5 +1,13 @@
 version: '3'
 
+includes:
+  terraform:
+    taskfile: ./terraform/Taskfile.yml
+    dir: ./terraform
+  helm:
+    taskfile: ./helm/Taskfile.yml
+    dir: ./helm
+
 tasks:
   create:
     desc: Create the complete remote infrastructure (Terraform apply + kubectl setup)
@@ -8,28 +16,18 @@ tasks:
         echo "🚀 Creating remote infrastructure..."
         echo ""
         echo "📋 Step 1: Applying Terraform configuration..."
-      - task: infrastructure:terraform:apply
+      - task: terraform:apply
 
   setup:
     desc: Setup kubectl configuration using setup script
     cmds:
       - echo "🔧 Initializing Terraform..."
-      - task: infrastrcture:terraform:init
+      - task: terraform:init
 
   destroy:
     desc: Destroy the complete remote infrastructure
-    prompt: Are you sure you want to DESTROY all remote infrastructure?
     cmds:
-      - echo "💥 Destroying remote infrastructure..."
-      - echo ""
-      - echo "⚠️  This will destroy:"
-      - echo "   • Kubernetes cluster and all workloads"
-      - echo "   • PostgreSQL database and all data"
-      - echo "   • Redis instance and all data"
-      - echo ""
-      - task: infrastructure:terraform:destroy
-      - echo ""
-      - echo "💀 Remote infrastructure destroyed!"
+      - task: terraform:destroy
 
   status:
     desc: Show status of remote infrastructure
@@ -59,3 +57,38 @@ tasks:
       - task: infrastructure:terraform:format:check
       - echo ""
       - echo "✅ Remote infrastructure validation complete!"
+
+  registry:push:
+    desc: Push Docker images to the DigitalOcean registry from Terraform outputs
+    deps: [registry:login]
+    cmds:
+      - |
+        cd terraform
+        REGISTRY_ENDPOINT=$(tofu output -raw registry_endpoint)
+
+        echo "Registry endpoint: $REGISTRY_ENDPOINT"
+
+        docker tag poe-accountant-ninja-server:latest $REGISTRY_ENDPOINT/poe-accountant-ninja-server:latest
+        docker push $REGISTRY_ENDPOINT/poe-accountant-ninja-server:latest
+
+        docker tag poe-accountant-api-server:latest $REGISTRY_ENDPOINT/poe-accountant-api-server:latest
+        docker push $REGISTRY_ENDPOINT/poe-accountant-api-server:latest
+
+  login:
+    desc: Login to the DigitalOcean registry using doctl
+    cmds:
+      - |
+        # Initialize doctl auth with DigitalOcean token
+        echo "Initializing doctl authentication..."
+        doctl auth init --access-token $DIGITALOCEAN_TOKEN
+
+        # Get registry name from Terraform outputs for reference
+        cd terraform
+        REGISTRY_NAME=$(tofu output -raw registry_name)
+
+        echo "Registry name: $REGISTRY_NAME"
+        doctl registry login
+
+  helm:
+    cmds:
+      - helm {{.CLI_ARGS}}

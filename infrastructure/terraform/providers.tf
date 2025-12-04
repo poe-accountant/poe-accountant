@@ -50,3 +50,7 @@ provider "kubernetes" {
   token                  = module.k8s.cluster_token
   cluster_ca_certificate = base64decode(module.k8s.cluster_ca_certificate)
 }
+
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}

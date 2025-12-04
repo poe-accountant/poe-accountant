@@ -1,6 +1,6 @@
 # Global configuration
-# global:
-#   namespace: poe-accountant
+global:
+  namespace: poe-accountant
 
 # Docker registry configuration
 # Set in command line
@@ -24,6 +24,7 @@ services:
         servicePort: 80  # Optional: defaults to containerPort
     # Service configuration
     ingress:
+      path: /ninja
       healthCheck: /health
     env:
       NODE_ENV: production

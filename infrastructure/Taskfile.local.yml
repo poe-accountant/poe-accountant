@@ -17,26 +17,21 @@ tasks:
 
   start:
     desc: Start local Redis and PostgreSQL containers
-    deps: [setup]
+    deps: [setup, provision, wait-for-health]
     cmds:
-      - echo "🐳 Starting local infrastructure with Docker Compose..."
-      - docker compose up -d
-      - echo ""
-      - echo "⏳ Waiting for services to be healthy..."
+      - task: setup
+      - task: provision
       - task: wait-for-health
-      - echo ""
-      - echo "✅ Local managed services started."
-      - task docker:build:all
-      - echo ""
-      - echo "Deploying to k8s"
-      - echo "📦 Updating Helm dependencies..."
+  
+  helm:deploy:
+    desc: Deploy to Kubernetes using Helm
+    cmds:
       - helm dependency update ./infrastructure/helm
-      - echo "🚀 Installing/upgrading Helm chart..."
       - |
-        helm upgrade --install poe-accountant ./infrastructure/helm \
+        helm upgrade --install poe-accountant ./helm \
           --namespace poe-accountant \
           --create-namespace \
-          --values ./infrastructure/helm/values.yaml \
+          --values ./helm/values.yaml \
           --wait \
           --debug
 

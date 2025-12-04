@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 ARG NODE_VERSION=22-alpine
-ARG WORKSPACE=ninja-server
+ARG WORKSPACE
 
 FROM node:${NODE_VERSION} AS base
 RUN corepack enable && corepack prepare yarn@stable --activate

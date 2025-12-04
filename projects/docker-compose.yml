@@ -1,41 +1,16 @@
 services:
-  postgres:
-    image: postgres:${LOCAL_POSTGRES_VERSION}
-    container_name: postgres
+  ninja-server:
+    image: poe-accountant-ninja-server:latest
+    container_name: ninja-server
+    ports:
+      - "4000:4000"
     environment:
-      POSTGRES_DB: ${LOCAL_POSTGRES_DB}
-      POSTGRES_USER: ${LOCAL_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${LOCAL_POSTGRES_PASSWORD}
-    ports:
-      - "${LOCAL_POSTGRES_PORT}:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
+      NODE_ENV: production
+      DATABASE_URL: postgres://${LOCAL_POSTGRES_USER}:${LOCAL_POSTGRES_PASSWORD}@postgres:${LOCAL_POSTGRES_PORT}/${LOCAL_POSTGRES_DB}
+      VALKEY_URL: redis://valkey:${LOCAL_VALKEY_PORT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${LOCAL_POSTGRES_USER}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  valkey:
-    image: valkey/valkey:${LOCAL_VALKEY_VERSION}
-    container_name: valkey
-    ports:
-      - "${LOCAL_VALKEY_PORT}:6379"
-    volumes:
-      - valkey-data:/data
-    command: valkey-server --appendonly yes
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "valkey-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-volumes:
-  postgres-data:
-  valkey-data:
-
-networks:
-  default:
-    name: ${LOCAL_DOCKER_NETWORK}

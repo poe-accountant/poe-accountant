@@ -1,81 +1,90 @@
 version: '3'
 
 vars:
-  TERRAFORM_DIR: ./infrastructure/terraform
+  TERRAFORM_DIR: .
   PROJECT_NAME: poe-accountant
 
 tasks:
+  tofu:
+    desc: Run OpenTofu command in the Terraform directory
+    dir: "{{.TERRAFORM_DIR}}"
+    deps: [check:token]
+    cmds:
+      - tofu {{.CLI_ARGS}}
+
   init:
     desc: Initialize Terraform in the infrastructure/terraform directory
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu init
+      - task: tofu
+        vars:
+          CLI_ARGS: "init"
 
   init:upgrade:
     desc: Initialize Terraform with provider upgrades
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu init -upgrade
+      - task: tofu
+        vars:
+          CLI_ARGS: "init -upgrade"
 
   plan:
     desc: Run Terraform plan to see what changes will be made
-    dir: "{{.TERRAFORM_DIR}}"
-    deps: [validate]
     cmds:
-      - tofu plan
+      - task: tofu
+        vars:
+          CLI_ARGS: "plan"
 
   plan:destroy:
     desc: Run Terraform plan for destroy to see what will be destroyed
-    dir: "{{.TERRAFORM_DIR}}"
-    deps: [validate]
     cmds:
-      - tofu plan -destroy
+      - task: tofu
+        vars:
+          CLI_ARGS: "destroy"
 
   apply:
     desc: Apply Terraform changes
-    dir: "{{.TERRAFORM_DIR}}"
-    deps: [validate, check:token]
     cmds:
-      - tofu apply
+      - task: tofu
+        vars:
+          CLI_ARGS: "apply"
 
   apply:auto:
     desc: Apply Terraform changes without interactive approval
-    dir: "{{.TERRAFORM_DIR}}"
-    deps: [validate, check:token]
     cmds:
-      - tofu apply -auto-approve
+      - task: tofu
+        vars:
+          CLI_ARGS: "apply -auto-approve"
 
   redeploy:helm:
     desc: Force redeploy Helm release by tainting and applying
-    dir: "{{.TERRAFORM_DIR}}"
-    deps: [taint:helm, validate, check:token]
     cmds:
-      - tofu apply -auto-approve
+      - task: taint:helm
+      - task: apply:auto
 
   destroy:
     desc: Destroy Terraform-managed infrastructure
-    dir: "{{.TERRAFORM_DIR}}"
-    deps: [validate]
     prompt: Are you sure you want to DESTROY all Terraform-managed infrastructure?
     cmds:
-      - tofu destroy
+      - task: tofu
+        vars:
+          CLI_ARGS: "destroy"
 
   destroy:auto:
     desc: Destroy Terraform-managed infrastructure without interactive approval
-    dir: "{{.TERRAFORM_DIR}}"
-    deps: [validate]
     cmds:
-      - tofu destroy -auto-approve
+      - task: tofu
+        vars:
+          CLI_ARGS: "destroy -auto-approve"
 
   validate:
     desc: Validate Terraform configuration files
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu validate
+      - task: tofu
+        vars:
+          CLI_ARGS: "validate"
 
   check:token:
     desc: Check if DigitalOcean token is configured
-    dir: "{{.TERRAFORM_DIR}}"
+    silent: true
     cmds:
       - |
         if [ -z "$DIGITALOCEAN_TOKEN" ]; then
@@ -84,61 +93,69 @@ tasks:
           echo "  1. Environment variable: export DIGITALOCEAN_TOKEN=\"your-token\""
           exit 1
         fi
-        echo "✅ DigitalOcean token found and configured correctly"
 
   format:
     desc: Format Terraform configuration files
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu fmt -recursive
+      - task: tofu
+        vars:
+          CLI_ARGS: "fmt -recursive"
 
   format:check:
     desc: Check if Terraform files are properly formatted
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu fmt -check -recursive
+      - task: tofu
+        vars:
+          CLI_ARGS: "fmt -check -recursive"
 
   show:
     desc: Show current Terraform state
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu show
+      - task: tofu
+        vars:
+          CLI_ARGS: "show"
 
   state:list:
     desc: List all resources in Terraform state
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu state list
+      - task: tofu
+        vars:
+          CLI_ARGS: "state list"
 
   state:show:
     desc: "Show details of a specific resource (usage: task terraform:state:show -- <resource_name>)"
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu state show {{.CLI_ARGS}}
+      - task: tofu
+        vars:
+          CLI_ARGS: "state show {{.CLI_ARGS}}"
 
   taint:helm:
     desc: Taint the Helm release to force recreation on next apply
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu taint module.helm.helm_release.poe_accountant
+      - task: taint
+        vars:
+          CLI_ARGS: "helm_release.poe_accountant"
 
   taint:
     desc: "Taint a specific resource (usage: task terraform:taint -- <resource_name>)"
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu taint {{.CLI_ARGS}}
+      - task: tofu
+        vars:
+          CLI_ARGS: "taint {{.CLI_ARGS}}"
 
   output:
     desc: Show Terraform outputs
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu output
+      - task: tofu
+        vars:
+          CLI_ARGS: "output"
 
   output:json:
     desc: Show Terraform outputs in JSON format
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu output -json
+      - task: tofu
+        vars:
+          CLI_ARGS: "output -json"
 
   kubectl:setup:
     desc: Configure kubectl to connect to the Kubernetes cluster using Terraform outputs
@@ -182,57 +199,57 @@ tasks:
 
   workspace:list:
     desc: List Terraform workspaces
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu workspace list
+      - task: tofu
+        vars:
+          CLI_ARGS: "workspace list"
 
   workspace:new:
     desc: "Create new Terraform workspace (usage: task terraform:workspace:new -- <workspace_name>)"
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu workspace new {{.CLI_ARGS}}
+      - task: tofu
+        vars:
+          CLI_ARGS: "workspace new {{.CLI_ARGS}}"
 
   workspace:select:
     desc: "Select Terraform workspace (usage: task terraform:workspace:select -- <workspace_name>)"
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu workspace select {{.CLI_ARGS}}
+      - task: tofu
+        vars:
+          CLI_ARGS: "workspace select {{.CLI_ARGS}}"
 
   clean:
     desc: Clean Terraform cache and temporary files
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
       - rm -rf .terraform
       - rm -f .terraform.lock.hcl
       - rm -f terraform.tfstate.backup
 
-  lint:
-    desc: Run comprehensive checks (format check + validate)
-    dir: "{{.TERRAFORM_DIR}}"
-    cmds:
-      - tofu fmt -check -recursive
-      - tofu validate
-
   refresh:
     desc: Refresh Terraform state to match real infrastructure
     dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu refresh
+      - task: tofu
+        vars:
+          CLI_ARGS: "refresh"
 
   import:
     desc: "Import existing resource into Terraform state (usage: task terraform:import -- <resource_type.name> <resource_id>)"
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu import {{.CLI_ARGS}}
+      - task: tofu
+        vars:
+          CLI_ARGS: "import {{.CLI_ARGS}}"
 
   graph:
     desc: Generate and display Terraform dependency graph
-    dir: "{{.TERRAFORM_DIR}}"
     cmds:
-      - tofu graph | dot -Tsvg > terraform-graph.svg
-      - echo "Graph saved to terraform-graph.svg"
+      - task: tofu
+        vars:
+          CLI_ARGS: "graph | dot -Tsvg > terraform-graph.svg"
 
   version:
     desc: Show OpenTofu version
     cmds:
-      - tofu version
+      - task: tofu
+        vars:
+          CLI_ARGS: "version"

@@ -3,18 +3,15 @@ version: '3'
 dotenv: ['.env.local', '.env']
 
 includes:
-  infrastructure:remote:
+  remote:
     taskfile: ./infrastructure/Taskfile.remote.yml
-    dir: .
-  infrastructure:local:
+    dir: ./infrastructure
+  local:
     taskfile: ./infrastructure/Taskfile.local.yml
-    dir: .
-  remote:terraform:
-    taskfile: ./infrastructure/terraform/Taskfile.yml
-    dir: .
-  docker:
-    taskfile: ./Taskfile.docker.yml
-    dir: .
+    dir: ./infrastructure
+  projects:
+    taskfile: ./projects/Taskfile.yml
+    dir: ./projects
 
 tasks:
   install:
@@ -41,3 +38,9 @@ tasks:
     desc: Set up environment variables
     cmds:
       - ./scripts/setup-env.sh
+
+  start-local:
+    desc: Start local infrastructure and deploy to local Kubernetes
+    cmds:
+      - task: infrastructure:local:start
+      - echo "✅ Local environment is up and running!"
