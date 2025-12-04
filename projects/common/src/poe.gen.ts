@@ -1,5 +1,8 @@
 // This file is auto-generated from https://www.pathofexile.com/developer/docs/reference#types
 
+
+
+// #region Type Information
 // This file is auto-generated from https://www.pathofexile.com/developer/docs/reference#types
 
 import { Type, Expose } from 'class-transformer';
@@ -51,6 +54,10 @@ export class League {
   @Expose()
   @IsOptional()
   @IsString()
+  name?: string;
+  @Expose()
+  @IsOptional()
+  @IsString()
   description?: string;
   @Expose()
   @IsOptional()
@@ -71,6 +78,10 @@ export class League {
   @IsOptional()
   @IsBoolean()
   event?: boolean;
+  @Expose()
+  @IsOptional()
+  @IsString()
+  goal?: string;
   @Expose()
   @IsOptional()
   @IsString()
@@ -853,6 +864,8 @@ export enum FrameType {
   FoilFrame = 9, // Foil frame
   SupporterFoilFrame = 10, // Supporter Foil frame
   NecropolisFrame = 11, // Necropolis frame
+  GoldFrame = 12, // Gold frame
+  BreachSkillFrame = 13, // Breach Skill frame
 }
 /**
  * object ItemHybrid
@@ -948,6 +961,10 @@ export class Item {
   @Expose()
   @IsOptional()
   @IsString()
+  iconTierText?: string;
+  @Expose()
+  @IsOptional()
+  @IsString()
   league?: string;
   @Expose()
   @IsOptional()
@@ -982,6 +999,10 @@ export class Item {
   @IsOptional()
   @IsBoolean()
   memoryItem?: boolean;
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  mutated?: boolean;
   @Expose()
   @IsOptional()
   @IsBoolean()
@@ -1074,7 +1095,15 @@ export class Item {
   @Expose()
   @IsOptional()
   @IsBoolean()
+  sanctified?: boolean;
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
   unmodifiable?: boolean;
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  unmodifiableExceptChaos?: boolean;
   @Expose()
   @IsOptional()
   @IsBoolean()
@@ -1207,6 +1236,11 @@ export class Item {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  mutatedMods?: string[];
+  @Expose()
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   crucibleMods?: string[];
   @Expose()
   @IsOptional()
@@ -1222,6 +1256,15 @@ export class Item {
   @IsOptional()
   @IsBoolean()
   veiled?: boolean;
+  @Expose()
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  desecratedMods?: string[];
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  desecrated?: boolean;
   @Expose()
   @IsOptional()
   @Type(() => GemTab)
@@ -1245,11 +1288,6 @@ export class Item {
   @IsArray()
   @IsString({ each: true })
   flavourText?: string[];
-  @Expose()
-  @IsOptional()
-  @IsArray()
-  @IsAny([[IsString()], [IsObject()]], { each: true })
-  flavourTextParsed?: (string | Dictionary<object>)[];
   @Expose()
   @IsOptional()
   @IsString()
@@ -1821,6 +1859,10 @@ export class StashTabMetadata {
   @IsOptional()
   @IsString()
   colour?: string;
+  @Expose()
+  @IsOptional()
+  @IsObject()
+  map?: Dictionary<object>;
 }
 /**
  * object StashTab
@@ -1834,6 +1876,10 @@ export class StashTab {
   @IsOptional()
   @IsString()
   parent?: string;
+  @Expose()
+  @IsOptional()
+  @IsString()
+  folder?: string;
   @Expose()
   @IsString()
   name!: string;
@@ -1960,3 +2006,644 @@ export class ItemFilter {
   @ValidateNested()
   validation?: ItemFilterValidation;
 }
+/**
+ * object AccountProfileGetProfileResponseTwitch
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountProfileGetProfileResponseTwitch {
+  @Expose()
+  @IsString()
+  name!: string;
+}
+/**
+ * object AccountProfileGetProfileResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountProfileGetProfileResponse {
+  @Expose()
+  @IsString()
+  uuid!: string;
+  @Expose()
+  @IsString()
+  name!: string;
+  @Expose()
+  @IsOptional()
+  @IsString()
+  locale?: string;
+  @Expose()
+  @IsOptional()
+  @Type(() => AccountProfileGetProfileResponseTwitch)
+  @ValidateNested()
+  twitch?: AccountProfileGetProfileResponseTwitch;
+}
+/**
+ * object AccountItemFiltersGetItemFiltersResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountItemFiltersGetItemFiltersResponse {
+  @Expose()
+  @Type(() => ItemFilter)
+  @IsArray()
+  @ValidateNested({ each: true })
+  filters!: ItemFilter[];
+}
+/**
+ * object AccountItemFiltersGetItemFilterResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountItemFiltersGetItemFilterResponse {
+  @Expose()
+  @Type(() => ItemFilter)
+  @ValidateNested()
+  filter!: ItemFilter;
+}
+/**
+ * object AccountItemFiltersCreateItemFilterResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountItemFiltersCreateItemFilterResponse {
+  @Expose()
+  @Type(() => ItemFilter)
+  @ValidateNested()
+  filter!: ItemFilter;
+}
+/**
+ * object AccountItemFiltersUpdateItemFilterResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountItemFiltersUpdateItemFilterResponse {
+  @Expose()
+  @Type(() => ItemFilter)
+  @ValidateNested()
+  filter!: ItemFilter;
+  @Expose()
+  @IsOptional()
+  @Type(() => Error)
+  @ValidateNested()
+  error?: Error;
+}
+/**
+ * object LeaguesListLeaguesResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class LeaguesListLeaguesResponse {
+  @Expose()
+  @Type(() => League)
+  @IsArray()
+  @ValidateNested({ each: true })
+  leagues!: League[];
+}
+/**
+ * object LeaguesGetLeagueResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class LeaguesGetLeagueResponse {
+  @Expose()
+  @IsOptional()
+  @Type(() => League)
+  @ValidateNested()
+  league?: League;
+}
+/**
+ * object LeaguesGetLeagueLadderPoE1OnlyResponseLadder
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class LeaguesGetLeagueLadderPoE1OnlyResponseLadder {
+  @Expose()
+  @IsInt()
+  @Max(0xFFFFFFFF)
+  @Min(0)
+  total!: number;
+  @Expose()
+  @IsOptional()
+  @IsString()
+  cached_since?: string;
+  @Expose()
+  @Type(() => LadderEntry)
+  @IsArray()
+  @ValidateNested({ each: true })
+  entries!: LadderEntry[];
+}
+/**
+ * object LeaguesGetLeagueLadderPoE1OnlyResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class LeaguesGetLeagueLadderPoE1OnlyResponse {
+  @Expose()
+  @Type(() => League)
+  @ValidateNested()
+  league!: League;
+  @Expose()
+  @Type(() => LeaguesGetLeagueLadderPoE1OnlyResponseLadder)
+  @ValidateNested()
+  ladder!: LeaguesGetLeagueLadderPoE1OnlyResponseLadder;
+}
+/**
+ * object LeaguesGetLeagueEventLadderPoE1OnlyResponseLadder
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class LeaguesGetLeagueEventLadderPoE1OnlyResponseLadder {
+  @Expose()
+  @IsInt()
+  @Max(0xFFFFFFFF)
+  @Min(0)
+  total!: number;
+  @Expose()
+  @Type(() => EventLadderEntry)
+  @IsArray()
+  @ValidateNested({ each: true })
+  entries!: EventLadderEntry[];
+}
+/**
+ * object LeaguesGetLeagueEventLadderPoE1OnlyResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class LeaguesGetLeagueEventLadderPoE1OnlyResponse {
+  @Expose()
+  @Type(() => League)
+  @ValidateNested()
+  league!: League;
+  @Expose()
+  @Type(() => LeaguesGetLeagueEventLadderPoE1OnlyResponseLadder)
+  @ValidateNested()
+  ladder!: LeaguesGetLeagueEventLadderPoE1OnlyResponseLadder;
+}
+/**
+ * object PvPMatchesPoE1OnlyListPvPMatchesResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class PvPMatchesPoE1OnlyListPvPMatchesResponse {
+  @Expose()
+  @Type(() => PvPMatch)
+  @IsArray()
+  @ValidateNested({ each: true })
+  matches!: PvPMatch[];
+}
+/**
+ * object PvPMatchesPoE1OnlyGetPvPMatchResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class PvPMatchesPoE1OnlyGetPvPMatchResponse {
+  @Expose()
+  @IsOptional()
+  @Type(() => PvPMatch)
+  @ValidateNested()
+  match?: PvPMatch;
+}
+/**
+ * object PvPMatchesPoE1OnlyGetPvPMatchLadderResponseLadder
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class PvPMatchesPoE1OnlyGetPvPMatchLadderResponseLadder {
+  @Expose()
+  @IsInt()
+  @Max(0xFFFFFFFF)
+  @Min(0)
+  total!: number;
+  @Expose()
+  @Type(() => PvPLadderTeamEntry)
+  @IsArray()
+  @ValidateNested({ each: true })
+  entries!: PvPLadderTeamEntry[];
+}
+/**
+ * object PvPMatchesPoE1OnlyGetPvPMatchLadderResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class PvPMatchesPoE1OnlyGetPvPMatchLadderResponse {
+  @Expose()
+  @Type(() => PvPMatch)
+  @ValidateNested()
+  match!: PvPMatch;
+  @Expose()
+  @Type(() => PvPMatchesPoE1OnlyGetPvPMatchLadderResponseLadder)
+  @ValidateNested()
+  ladder!: PvPMatchesPoE1OnlyGetPvPMatchLadderResponseLadder;
+}
+/**
+ * object AccountLeaguesPoE1OnlyGetLeaguesResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountLeaguesPoE1OnlyGetLeaguesResponse {
+  @Expose()
+  @Type(() => League)
+  @IsArray()
+  @ValidateNested({ each: true })
+  leagues!: League[];
+}
+/**
+ * object AccountCharactersListCharactersResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountCharactersListCharactersResponse {
+  @Expose()
+  @Type(() => Character)
+  @IsArray()
+  @ValidateNested({ each: true })
+  characters!: Character[];
+}
+/**
+ * object AccountCharactersGetCharacterResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountCharactersGetCharacterResponse {
+  @Expose()
+  @IsOptional()
+  @Type(() => Character)
+  @ValidateNested()
+  character?: Character;
+}
+/**
+ * object AccountStashesPoE1OnlyListStashesResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountStashesPoE1OnlyListStashesResponse {
+  @Expose()
+  @Type(() => StashTab)
+  @IsArray()
+  @ValidateNested({ each: true })
+  stashes!: StashTab[];
+}
+/**
+ * object AccountStashesPoE1OnlyGetStashResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class AccountStashesPoE1OnlyGetStashResponse {
+  @Expose()
+  @IsOptional()
+  @Type(() => StashTab)
+  @ValidateNested()
+  stash?: StashTab;
+}
+/**
+ * object LeagueAccountsPoE1OnlyGetLeagueAccountResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class LeagueAccountsPoE1OnlyGetLeagueAccountResponse {
+  @Expose()
+  @Type(() => LeagueAccount)
+  @ValidateNested()
+  league_account!: LeagueAccount;
+}
+/**
+ * object GuildStashesPoE1OnlyListGuildStashesResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class GuildStashesPoE1OnlyListGuildStashesResponse {
+  @Expose()
+  @Type(() => StashTab)
+  @IsArray()
+  @ValidateNested({ each: true })
+  stashes!: StashTab[];
+}
+/**
+ * object GuildStashesPoE1OnlyGetGuildStashResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class GuildStashesPoE1OnlyGetGuildStashResponse {
+  @Expose()
+  @IsOptional()
+  @Type(() => StashTab)
+  @ValidateNested()
+  stash?: StashTab;
+}
+/**
+ * object PublicStashesPoE1OnlyGetPublicStashesResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class PublicStashesPoE1OnlyGetPublicStashesResponse {
+  @Expose()
+  @IsString()
+  next_change_id!: string;
+  @Expose()
+  @Type(() => PublicStashChange)
+  @IsArray()
+  @ValidateNested({ each: true })
+  stashes!: PublicStashChange[];
+}
+/**
+ * object CurrencyExchangeGetExchangeMarketsResponseMarkets
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class CurrencyExchangeGetExchangeMarketsResponseMarkets {
+  @Expose()
+  @IsString()
+  league!: string;
+  @Expose()
+  @IsString()
+  market_id!: string;
+  @Expose()
+  @IsDictionary([IsInt(), Max(0xFFFFFFFF), Min(0)])
+  @Type(() => Dictionary<unknown>)
+  volume_traded!: Dictionary<number>;
+  @Expose()
+  @IsDictionary([IsInt(), Max(0xFFFFFFFF), Min(0)])
+  @Type(() => Dictionary<unknown>)
+  lowest_stock!: Dictionary<number>;
+  @Expose()
+  @IsDictionary([IsInt(), Max(0xFFFFFFFF), Min(0)])
+  @Type(() => Dictionary<unknown>)
+  highest_stock!: Dictionary<number>;
+  @Expose()
+  @IsDictionary([IsInt(), Max(0xFFFFFFFF), Min(0)])
+  @Type(() => Dictionary<unknown>)
+  lowest_ratio!: Dictionary<number>;
+  @Expose()
+  @IsDictionary([IsInt(), Max(0xFFFFFFFF), Min(0)])
+  @Type(() => Dictionary<unknown>)
+  highest_ratio!: Dictionary<number>;
+}
+/**
+ * object CurrencyExchangeGetExchangeMarketsResponse
+ * Generated from https://www.pathofexile.com/developer/docs/reference#types
+ */
+export class CurrencyExchangeGetExchangeMarketsResponse {
+  @Expose()
+  @IsInt()
+  @Max(0xFFFFFFFF)
+  @Min(0)
+  next_change_id!: number;
+  @Expose()
+  @Type(() => CurrencyExchangeGetExchangeMarketsResponseMarkets)
+  @IsArray()
+  @ValidateNested({ each: true })
+  markets!: CurrencyExchangeGetExchangeMarketsResponseMarkets[];
+}
+
+
+// #endregion Type Information
+
+
+
+// #region Endpoint Information
+
+export const serverEndpoint = "https://api.pathofexile.com";
+export const serverApiPaths = {
+
+// #region Account Profile
+
+// #region Get Profile
+  "Get Profile": {
+    name: "Get Profile",
+    method: "GET",
+    path: "/profile",
+    responseType: AccountProfileGetProfileResponse,
+  },
+
+// #endregion Get Profile
+
+// #endregion Account Profile
+
+// #region Account Item Filters
+
+// #region Get Item Filters
+  "Get Item Filters": {
+    name: "Get Item Filters",
+    method: "GET",
+    path: "/item-filter",
+    responseType: AccountItemFiltersGetItemFiltersResponse,
+  },
+
+// #endregion Get Item Filters
+
+// #region Get Item Filter
+  "Get Item Filter": {
+    name: "Get Item Filter",
+    method: "GET",
+    path: "/item-filter/<id>",
+    responseType: AccountItemFiltersGetItemFilterResponse,
+  },
+
+// #endregion Get Item Filter
+
+// #region Create Item Filter
+  "Create Item Filter": {
+    name: "Create Item Filter",
+    method: "POST",
+    path: "/item-filter",
+    responseType: AccountItemFiltersCreateItemFilterResponse,
+  },
+
+// #endregion Create Item Filter
+
+// #region Update Item Filter
+  "Update Item Filter": {
+    name: "Update Item Filter",
+    method: "POST",
+    path: "/item-filter/<id>",
+    responseType: AccountItemFiltersUpdateItemFilterResponse,
+  },
+
+// #endregion Update Item Filter
+
+// #endregion Account Item Filters
+
+// #region Leagues
+
+// #region List Leagues
+  "List Leagues": {
+    name: "List Leagues",
+    method: "GET",
+    path: "/league",
+    responseType: LeaguesListLeaguesResponse,
+  },
+
+// #endregion List Leagues
+
+// #region Get League
+  "Get League": {
+    name: "Get League",
+    method: "GET",
+    path: "/league/<league>",
+    responseType: LeaguesGetLeagueResponse,
+  },
+
+// #endregion Get League
+
+// #region Get League Ladder (PoE1 only)
+  "Get League Ladder (PoE1 only)": {
+    name: "Get League Ladder (PoE1 only)",
+    method: "GET",
+    path: "/league/<league>/ladder",
+    responseType: LeaguesGetLeagueLadderPoE1OnlyResponse,
+  },
+
+// #endregion Get League Ladder (PoE1 only)
+
+// #region Get League Event Ladder (PoE1 only)
+  "Get League Event Ladder (PoE1 only)": {
+    name: "Get League Event Ladder (PoE1 only)",
+    method: "GET",
+    path: "/league/<league>/event-ladder",
+    responseType: LeaguesGetLeagueEventLadderPoE1OnlyResponse,
+  },
+
+// #endregion Get League Event Ladder (PoE1 only)
+
+// #endregion Leagues
+
+// #region PvP Matches (PoE1 only)
+
+// #region List PvP Matches
+  "List PvP Matches": {
+    name: "List PvP Matches",
+    method: "GET",
+    path: "/pvp-match",
+    responseType: PvPMatchesPoE1OnlyListPvPMatchesResponse,
+  },
+
+// #endregion List PvP Matches
+
+// #region Get PvP Match
+  "Get PvP Match": {
+    name: "Get PvP Match",
+    method: "GET",
+    path: "/pvp-match/<match>",
+    responseType: PvPMatchesPoE1OnlyGetPvPMatchResponse,
+  },
+
+// #endregion Get PvP Match
+
+// #region Get PvP Match Ladder
+  "Get PvP Match Ladder": {
+    name: "Get PvP Match Ladder",
+    method: "GET",
+    path: "/pvp-match/<match>/ladder",
+    responseType: PvPMatchesPoE1OnlyGetPvPMatchLadderResponse,
+  },
+
+// #endregion Get PvP Match Ladder
+
+// #endregion PvP Matches (PoE1 only)
+
+// #region Account Leagues (PoE1 only)
+
+// #region Get Leagues
+  "Get Leagues": {
+    name: "Get Leagues",
+    method: "GET",
+    path: "/account/leagues[/<realm>]",
+    responseType: AccountLeaguesPoE1OnlyGetLeaguesResponse,
+  },
+
+// #endregion Get Leagues
+
+// #endregion Account Leagues (PoE1 only)
+
+// #region Account Characters
+
+// #region List Characters
+  "List Characters": {
+    name: "List Characters",
+    method: "GET",
+    path: "/character[/<realm>]",
+    responseType: AccountCharactersListCharactersResponse,
+  },
+
+// #endregion List Characters
+
+// #region Get Character
+  "Get Character": {
+    name: "Get Character",
+    method: "GET",
+    path: "/character[/<realm>]/<name>",
+    responseType: AccountCharactersGetCharacterResponse,
+  },
+
+// #endregion Get Character
+
+// #endregion Account Characters
+
+// #region Account Stashes (PoE1 only)
+
+// #region List Stashes
+  "List Stashes": {
+    name: "List Stashes",
+    method: "GET",
+    path: "/stash[/<realm>]/<league>",
+    responseType: AccountStashesPoE1OnlyListStashesResponse,
+  },
+
+// #endregion List Stashes
+
+// #region Get Stash
+  "Get Stash": {
+    name: "Get Stash",
+    method: "GET",
+    path: "/stash[/<realm>]/<league>/<stash_id>[/<substash_id>]",
+    responseType: AccountStashesPoE1OnlyGetStashResponse,
+  },
+
+// #endregion Get Stash
+
+// #endregion Account Stashes (PoE1 only)
+
+// #region League Accounts (PoE1 only)
+
+// #region Get League Account
+  "Get League Account": {
+    name: "Get League Account",
+    method: "GET",
+    path: "/league-account[/<realm>]/<league>",
+    responseType: LeagueAccountsPoE1OnlyGetLeagueAccountResponse,
+  },
+
+// #endregion Get League Account
+
+// #endregion League Accounts (PoE1 only)
+
+// #region Guild Stashes (PoE1 only)
+
+// #region List Guild Stashes
+  "List Guild Stashes": {
+    name: "List Guild Stashes",
+    method: "GET",
+    path: "/guild[/<realm>]/stash/<league>",
+    responseType: GuildStashesPoE1OnlyListGuildStashesResponse,
+  },
+
+// #endregion List Guild Stashes
+
+// #region Get Guild Stash
+  "Get Guild Stash": {
+    name: "Get Guild Stash",
+    method: "GET",
+    path: "/guild[/<realm>]/stash/<league>/<stash_id>[/<substash_id>]",
+    responseType: GuildStashesPoE1OnlyGetGuildStashResponse,
+  },
+
+// #endregion Get Guild Stash
+
+// #endregion Guild Stashes (PoE1 only)
+
+// #region Public Stashes (PoE1 only)
+
+// #region Get Public Stashes
+  "Get Public Stashes": {
+    name: "Get Public Stashes",
+    method: "GET",
+    path: "/public-stash-tabs[/<realm>]",
+    responseType: PublicStashesPoE1OnlyGetPublicStashesResponse,
+  },
+
+// #endregion Get Public Stashes
+
+// #endregion Public Stashes (PoE1 only)
+
+// #region Currency Exchange
+
+// #region Get Exchange Markets
+  "Get Exchange Markets": {
+    name: "Get Exchange Markets",
+    method: "GET",
+    path: "/currency-exchange[/<realm>][/<id>]",
+    responseType: CurrencyExchangeGetExchangeMarketsResponse,
+  },
+
+// #endregion Get Exchange Markets
+
+// #endregion Currency Exchange
+} as const;
+
+// #endregion Endpoint Information
+

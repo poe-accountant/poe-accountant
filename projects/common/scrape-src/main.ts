@@ -14,14 +14,44 @@ const outStream = createWriteStream(OUTPUT_FILE);
 // const response = (await axios.get(BASE_URL)).data;
 const response = await readFile('./docs/docs.htm', 'utf-8');
 
-const allObjects = htmlToData(response);
+const htmlData = htmlToData(response);
 
 outStream.write(`// This file is auto-generated from ${BASE_URL}\n\n`);
 
-const typesManager = new ScrapeTypesManager(allObjects);
+outStream.write('\n\n// #region Type Information\n');
+const typesManager = new ScrapeTypesManager(htmlData.typeDetails);
 for (const type of typesManager.generateTypeScriptTypes()) {
   outStream.write(type);
 }
+outStream.write('\n\n// #endregion Type Information\n\n');
+
+outStream.write('\n\n// #region Endpoint Information\n\n');
+outStream.write(
+  `export const serverEndpoint = ${JSON.stringify(htmlData.apiEndpoint)};\n`,
+);
+
+outStream.write('export const serverApiPaths = {\n');
+
+for (const [categoryName, categoryEndpoints] of Object.entries(
+  htmlData.apiCategories,
+)) {
+  outStream.write(`\n// #region ${categoryName}\n`);
+
+  for (const endpoint of categoryEndpoints.endpoints) {
+    outStream.write(`\n// #region ${endpoint.name}
+  ${JSON.stringify(endpoint.name)}: {
+    name: ${JSON.stringify(endpoint.name)},
+    method: ${JSON.stringify(endpoint.method)},
+    path: ${JSON.stringify(endpoint.path)},
+    responseType: ${ScrapeTypesManager.safeName(endpoint.type.name)},
+  },\n`);
+    outStream.write(`\n// #endregion ${endpoint.name}\n`);
+  }
+
+  outStream.write(`\n// #endregion ${categoryName}\n`);
+}
+
+outStream.write('} as const;\n\n// #endregion Endpoint Information\n\n');
 
 const data = await readFile('./docs/stats.json', 'utf-8');
 await writeFile(

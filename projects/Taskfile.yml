@@ -1,5 +1,10 @@
 version: '3'
 
+includes:
+  common:
+    taskfile: ./common/Taskfile.yml
+    dir: ./common
+
 tasks:
   build:target:
     dir: ..

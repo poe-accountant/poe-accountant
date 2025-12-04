@@ -1,5 +1,6 @@
 import { Type, plainToInstance } from 'class-transformer';
 import { IsArray, IsString, ValidateNested, IsInt, IsOptional } from 'class-validator';
+import "reflect-metadata";
 
 export class TradeStatsEntryOption {
   @IsInt()

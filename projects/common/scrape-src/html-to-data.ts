@@ -18,7 +18,36 @@ export type TypeDetails =
       details: ObjectTypeDetails[];
     };
 
-export function htmlToData(html: string): TypeDetails[] {
+function nextSiblingWhere(
+  ele: HTMLElement,
+  predicate: (ele: HTMLElement) => boolean,
+): HTMLElement | null {
+  let sibling = ele.nextElementSibling as HTMLElement | null;
+  while (sibling) {
+    if (predicate(sibling)) {
+      return sibling;
+    }
+    sibling = sibling.nextElementSibling as HTMLElement | null;
+  }
+  return null;
+}
+
+export function htmlToData(html: string): {
+  typeDetails: TypeDetails[];
+  apiEndpoint: string;
+  apiCategories: Record<
+    string,
+    {
+      requiredScope: string | null;
+      endpoints: {
+        name: string;
+        method: string;
+        path: string;
+        type: TypeDetails;
+      }[];
+    }
+  >;
+} {
   const dom = new JSDOM(html);
 
   const typesArticle = dom.window.document.querySelector('article#types');
@@ -31,9 +60,127 @@ export function htmlToData(html: string): TypeDetails[] {
     'table',
   ) as NodeListOf<HTMLTableElement>;
 
-  return Array.from(tables)
-    .map((table) => findTableDetails(table, dom.window))
-    .filter((val): val is NonNullable<typeof val> => val !== null);
+  const apiEndpointElement = dom.window.document.querySelector(
+    'article#endpoint code',
+  );
+  if (!apiEndpointElement) {
+    throw new Error('API endpoint element not found');
+  }
+
+  const apiArticles = Array.from(
+    dom.window.document.querySelectorAll('article'),
+  ).filter(
+    (article) =>
+      !article.id.startsWith('endpoint') &&
+      article.id !== 'types' &&
+      article.id !== 'extra',
+  );
+
+  const apiCategories = Object.fromEntries(
+    apiArticles
+      .map((apiArticle) => {
+        const articleName = apiArticle.querySelector('h2')?.textContent?.trim();
+        if (!articleName) {
+          console.warn(`Article without a name found, skipping`, apiArticle.id);
+          return null;
+        }
+
+        const requiredScope =
+          apiArticle
+            .querySelector('div[role="doc-subtitle"]')
+            ?.querySelector('a')
+            ?.textContent?.trim() ?? null;
+
+        if (!requiredScope) {
+          console.warn(`No required scope found for article ${apiArticle.id}`);
+          // Unknown if scope is required for everything, so we continue processing
+        }
+
+        return [
+          articleName,
+          {
+            requiredScope,
+            endpoints: Array.from(apiArticle.querySelectorAll('h3')).map(
+              (endpointHeader) => {
+                const id = endpointHeader.id;
+
+                const prettyName = endpointHeader?.textContent?.trim();
+                if (!prettyName) {
+                  throw new Error(
+                    `No name found for endpoint ${id} in article ${apiArticle.id}#${id}`,
+                  );
+                }
+
+                const methodAndPath = nextSiblingWhere(
+                  endpointHeader,
+                  (ele) => ele.tagName === 'PRE',
+                )?.querySelector('code')?.textContent;
+
+                if (!methodAndPath) {
+                  throw new Error(
+                    `No method and path found for endpoint ${id} in article ${apiArticle.id}#${id}`,
+                  );
+                }
+
+                // TODO: extract required headers
+
+                // TODO: extract query parameters
+
+                // TODO: extract body parameters
+
+                const [method, path] = methodAndPath.split(' ');
+
+                const returnsTable = nextSiblingWhere(
+                  endpointHeader,
+                  (ele) =>
+                    ele.tagName === 'H4' &&
+                    ele.textContent?.includes('Returns'),
+                )?.nextElementSibling?.querySelector<HTMLTableElement>('table');
+
+                if (!returnsTable) {
+                  throw new Error(
+                    `No table found for endpoint ${id} in article ${apiArticle.id}#${id}`,
+                  );
+                }
+
+                const type = convertTableToTypeDetails(
+                  'object',
+                  `${articleName} ${prettyName} Response`,
+                  undefined,
+                  returnsTable,
+                );
+                if (!type) {
+                  throw new Error(
+                    `Failed to convert table to type details for endpoint ${id} in article ${apiArticle.id}#${id}`,
+                  );
+                }
+
+                return {
+                  name: prettyName,
+                  method,
+                  path,
+                  type,
+                };
+              },
+            ),
+          },
+        ] as const;
+      })
+      .filter((val): val is NonNullable<typeof val> => val !== null),
+  );
+
+  return {
+    apiEndpoint: apiEndpointElement.textContent.trim(),
+    apiCategories,
+    typeDetails: [
+      ...Array.from(tables)
+        .map((table) => findTableDetails(table, dom.window))
+        .filter((val): val is NonNullable<typeof val> => val !== null),
+      ...Object.values(apiCategories)
+        .flatMap((category) => category.endpoints)
+        .map((endpoint) => endpoint.type),
+    ],
+  };
 }
 
 function convertObjectRowsToTypeDetails(
@@ -43,16 +190,24 @@ function convertObjectRowsToTypeDetails(
     .map((th) => th.textContent?.trim())
     .filter(Boolean) as string[];
 
-  if (!headerKeys.includes('Key')) {
+  const keyStrings = ['Key'];
+  const valueTypeStrings = ['Value Type', 'Type'];
+  const extraInfoStrings = ['Extra Information', 'Information'];
+
+  const keyHeader = headerKeys.find((key) => keyStrings.includes(key));
+  const valueTypeHeader = headerKeys.find((key) =>
+    valueTypeStrings.includes(key),
+  );
+  const extraInfoHeader = headerKeys.find((key) =>
+    extraInfoStrings.includes(key),
+  );
+
+  if (!keyHeader) {
     console.warn('No "Key" column found in table, skipping');
     return null;
   }
-  if (!headerKeys.includes('Value Type')) {
+  if (!valueTypeHeader) {
     console.warn('No "Value Type" column found in table, skipping');
-    return null;
-  }
-  if (!headerKeys.includes('Extra Information')) {
-    console.warn('No "Extra Information" column found in table, skipping');
     return null;
   }
 
@@ -65,17 +220,11 @@ function convertObjectRowsToTypeDetails(
     return row;
   });
 
-  if (!headerKeys.includes('Key') || !headerKeys.includes('Value Type')) {
-    // If the required columns are not present, we cannot process the rows
-    console.warn('Missing required columns in table rows, skipping');
-    return null;
-  }
-
   const typeDetails: ObjectTypeDetails[] = [];
   for (const row of rows) {
-    let key = row['Key'];
-    const valueType = row['Value Type'];
-    const extraInfo = row['Extra Information'];
+    let key = row[keyHeader];
+    const valueType = row[valueTypeHeader];
+    const extraInfo = extraInfoHeader ? row[extraInfoHeader] : undefined;
 
     if (!key || !valueType) {
       console.warn('Missing required fields in row, skipping');
@@ -162,6 +311,46 @@ function convertEnumRowsToTypeDetails(
   return enumDetails;
 }
 
+function convertTableToTypeDetails(
+  typeType: string,
+  typeName: string,
+  subtitle: string | undefined,
+  table: HTMLTableElement,
+): TypeDetails | null {
+  switch (typeType) {
+    case 'enum': {
+      const enumDetails = convertEnumRowsToTypeDetails(table);
+      if (!enumDetails) {
+        console.warn('No enum details found in table, skipping');
+        return null;
+      }
+      return {
+        type: 'enum',
+        name: typeName,
+        details: enumDetails,
+        subtitle,
+      };
+    }
+    case 'object': {
+      const details = convertObjectRowsToTypeDetails(table);
+      if (!details) {
+        console.warn('No details found in table, skipping');
+        return null;
+      }
+
+      return {
+        type: 'object',
+        name: typeName,
+        details: details,
+        subtitle,
+      };
+    }
+    default:
+      console.warn(`Unknown type "${typeType}" in header, skipping`);
+      return null;
+  }
+}
+
 function findTableDetails(
   table: HTMLTableElement,
   { Node }: DOMWindow,
@@ -207,36 +396,5 @@ function findTableDetails(
     return null;
   }
 
-  switch (typeType) {
-    case 'enum': {
-      const enumDetails = convertEnumRowsToTypeDetails(table);
-      if (!enumDetails) {
-        console.warn('No enum details found in table, skipping');
-        return null;
-      }
-      return {
-        type: 'enum',
-        name: typeName,
-        details: enumDetails,
-        subtitle,
-      };
-    }
-    case 'object': {
-      const details = convertObjectRowsToTypeDetails(table);
-      if (!details) {
-        console.warn('No details found in table, skipping');
-        return null;
-      }
-
-      return {
-        type: 'object',
-        name: typeName,
-        details: details,
-        subtitle,
-      };
-    }
-    default:
-      console.warn(`Unknown type "${typeType}" in header, skipping`);
-      return null;
-  }
+  return convertTableToTypeDetails(typeType, typeName, subtitle, table);
 }

@@ -165,7 +165,7 @@ export class ScrapeTypesManager {
     }
   }
 
-  private static safeName(name: string): string {
+  public static safeName(name: string): string {
     return name
       .trim()
       .replace(/[^a-zA-Z0-9_ ]/g, '')
