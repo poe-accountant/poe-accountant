@@ -1,7 +1,7 @@
 {
     "name": "@meepen/poe-common",
     "license": "MPL-2.0",
-    "version": "2.0.2",
+    "version": "2.1.0",
     "description": "Common schemas for the Path of Exile API",
     "keywords": [
         "poe",
@@ -54,6 +54,11 @@
             "types": "./dist/src/stats.d.ts",
             "import": "./dist/src/stats.js",
             "require": "./dist/src/stats.js"
+        },
+        "./api": {
+            "types": "./dist/src/api/poe-api.d.ts",
+            "import": "./dist/src/api/poe-api.js",
+            "require": "./dist/src/api/poe-api.js"
         }
     },
     "author": {

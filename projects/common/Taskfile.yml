@@ -5,3 +5,8 @@ tasks:
     desc: Scrape data from PoE website and generate JSON files
     cmds:
       - yarn scrape
+
+  test:
+    desc: Run tests
+    cmds:
+      - yarn test
