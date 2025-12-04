@@ -1,3 +1,12 @@
+import GGGNotice from './GGGNotice';
+
 export default function App() {
-  return <h1>Hello from React + Vite + TS</h1>;
+  return (
+    <>
+      <header>Path of Exile Accountant</header>
+      <footer>
+        <GGGNotice />
+      </footer>
+    </>
+  );
 }

@@ -43,6 +43,7 @@ for (const [categoryName, categoryEndpoints] of Object.entries(
   for (const endpoint of categoryEndpoints.endpoints) {
     outStream.write(`\n// #region ${endpoint.name}
   ${JSON.stringify(endpoint.name)}: {
+    requiredScope: ${JSON.stringify(categoryEndpoints.requiredScope)},
     name: ${JSON.stringify(endpoint.name)},
     method: ${JSON.stringify(endpoint.method)},
     path: ${JSON.stringify(endpoint.path)},
@@ -60,6 +61,7 @@ outStream.end();
 // #endregion Output Generation
 
 // #region Trade Stats Generation
+// Retrieved from https://www.pathofexile.com/api/trade/data/stats
 const data = await readFile('./docs/stats.json', 'utf-8');
 await writeFile(
   './src/trade-stats.gen.ts',

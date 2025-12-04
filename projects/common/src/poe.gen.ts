@@ -2384,6 +2384,7 @@ export const serverApiPaths = {
 
 // #region Get Profile
   "Get Profile": {
+    requiredScope: "account:profile",
     name: "Get Profile",
     method: "GET",
     path: "/profile",
@@ -2398,6 +2399,7 @@ export const serverApiPaths = {
 
 // #region Get Item Filters
   "Get Item Filters": {
+    requiredScope: "account:item_filter",
     name: "Get Item Filters",
     method: "GET",
     path: "/item-filter",
@@ -2408,6 +2410,7 @@ export const serverApiPaths = {
 
 // #region Get Item Filter
   "Get Item Filter": {
+    requiredScope: "account:item_filter",
     name: "Get Item Filter",
     method: "GET",
     path: "/item-filter/<id>",
@@ -2418,6 +2421,7 @@ export const serverApiPaths = {
 
 // #region Create Item Filter
   "Create Item Filter": {
+    requiredScope: "account:item_filter",
     name: "Create Item Filter",
     method: "POST",
     path: "/item-filter",
@@ -2428,6 +2432,7 @@ export const serverApiPaths = {
 
 // #region Update Item Filter
   "Update Item Filter": {
+    requiredScope: "account:item_filter",
     name: "Update Item Filter",
     method: "POST",
     path: "/item-filter/<id>",
@@ -2442,6 +2447,7 @@ export const serverApiPaths = {
 
 // #region List Leagues
   "List Leagues": {
+    requiredScope: "service:leagues",
     name: "List Leagues",
     method: "GET",
     path: "/league",
@@ -2452,6 +2458,7 @@ export const serverApiPaths = {
 
 // #region Get League
   "Get League": {
+    requiredScope: "service:leagues",
     name: "Get League",
     method: "GET",
     path: "/league/<league>",
@@ -2462,6 +2469,7 @@ export const serverApiPaths = {
 
 // #region Get League Ladder (PoE1 only)
   "Get League Ladder (PoE1 only)": {
+    requiredScope: "service:leagues",
     name: "Get League Ladder (PoE1 only)",
     method: "GET",
     path: "/league/<league>/ladder",
@@ -2472,6 +2480,7 @@ export const serverApiPaths = {
 
 // #region Get League Event Ladder (PoE1 only)
   "Get League Event Ladder (PoE1 only)": {
+    requiredScope: "service:leagues",
     name: "Get League Event Ladder (PoE1 only)",
     method: "GET",
     path: "/league/<league>/event-ladder",
@@ -2486,6 +2495,7 @@ export const serverApiPaths = {
 
 // #region List PvP Matches
   "List PvP Matches": {
+    requiredScope: "service:pvp_matches",
     name: "List PvP Matches",
     method: "GET",
     path: "/pvp-match",
@@ -2496,6 +2506,7 @@ export const serverApiPaths = {
 
 // #region Get PvP Match
   "Get PvP Match": {
+    requiredScope: "service:pvp_matches",
     name: "Get PvP Match",
     method: "GET",
     path: "/pvp-match/<match>",
@@ -2506,6 +2517,7 @@ export const serverApiPaths = {
 
 // #region Get PvP Match Ladder
   "Get PvP Match Ladder": {
+    requiredScope: "service:pvp_matches",
     name: "Get PvP Match Ladder",
     method: "GET",
     path: "/pvp-match/<match>/ladder",
@@ -2520,6 +2532,7 @@ export const serverApiPaths = {
 
 // #region Get Leagues
   "Get Leagues": {
+    requiredScope: "account:leagues",
     name: "Get Leagues",
     method: "GET",
     path: "/account/leagues[/<realm>]",
@@ -2534,6 +2547,7 @@ export const serverApiPaths = {
 
 // #region List Characters
   "List Characters": {
+    requiredScope: "account:characters",
     name: "List Characters",
     method: "GET",
     path: "/character[/<realm>]",
@@ -2544,6 +2558,7 @@ export const serverApiPaths = {
 
 // #region Get Character
   "Get Character": {
+    requiredScope: "account:characters",
     name: "Get Character",
     method: "GET",
     path: "/character[/<realm>]/<name>",
@@ -2558,6 +2573,7 @@ export const serverApiPaths = {
 
 // #region List Stashes
   "List Stashes": {
+    requiredScope: "account:stashes",
     name: "List Stashes",
     method: "GET",
     path: "/stash[/<realm>]/<league>",
@@ -2568,6 +2584,7 @@ export const serverApiPaths = {
 
 // #region Get Stash
   "Get Stash": {
+    requiredScope: "account:stashes",
     name: "Get Stash",
     method: "GET",
     path: "/stash[/<realm>]/<league>/<stash_id>[/<substash_id>]",
@@ -2582,6 +2599,7 @@ export const serverApiPaths = {
 
 // #region Get League Account
   "Get League Account": {
+    requiredScope: "account:league_accounts",
     name: "Get League Account",
     method: "GET",
     path: "/league-account[/<realm>]/<league>",
@@ -2596,6 +2614,7 @@ export const serverApiPaths = {
 
 // #region List Guild Stashes
   "List Guild Stashes": {
+    requiredScope: "account:guild:stashes",
     name: "List Guild Stashes",
     method: "GET",
     path: "/guild[/<realm>]/stash/<league>",
@@ -2606,6 +2625,7 @@ export const serverApiPaths = {
 
 // #region Get Guild Stash
   "Get Guild Stash": {
+    requiredScope: "account:guild:stashes",
     name: "Get Guild Stash",
     method: "GET",
     path: "/guild[/<realm>]/stash/<league>/<stash_id>[/<substash_id>]",
@@ -2620,6 +2640,7 @@ export const serverApiPaths = {
 
 // #region Get Public Stashes
   "Get Public Stashes": {
+    requiredScope: "service:psapi",
     name: "Get Public Stashes",
     method: "GET",
     path: "/public-stash-tabs[/<realm>]",
@@ -2634,6 +2655,7 @@ export const serverApiPaths = {
 
 // #region Get Exchange Markets
   "Get Exchange Markets": {
+    requiredScope: "service:cxapi",
     name: "Get Exchange Markets",
     method: "GET",
     path: "/currency-exchange[/<realm>][/<id>]",
