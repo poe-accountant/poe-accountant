@@ -59,6 +59,11 @@
             "types": "./dist/src/api/poe-api.d.ts",
             "import": "./dist/src/api/poe-api.js",
             "require": "./dist/src/api/poe-api.js"
+        },
+        "./rate-limiter": {
+            "types": "./dist/src/poe-rate-limiter.d.ts",
+            "import": "./dist/src/poe-rate-limiter.js",
+            "require": "./dist/src/poe-rate-limiter.js"
         }
     },
     "author": {

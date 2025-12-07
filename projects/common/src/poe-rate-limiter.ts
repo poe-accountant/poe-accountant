@@ -3,7 +3,7 @@ import type { serverApiPaths } from './poe.gen.js';
 type ServerApiPathKey = keyof typeof serverApiPaths;
 type ServerApiPath = (typeof serverApiPaths)[ServerApiPathKey];
 
-interface PoeRateLimiterOptions {
+export interface PoeRateLimiterOptions {
   /**
    * The additionalDelayMs defines how much extra delay to add on top of
    * what is calculated from the rate limit headers.
@@ -16,11 +16,6 @@ interface PoeRateLimiterOptions {
    */
   extraRuleThreshold: number;
 }
-
-const defaultOptions: PoeRateLimiterOptions = {
-  additionalDelayMs: 100,
-  extraRuleThreshold: 5,
-};
 
 export abstract class Rule {
   public constructor(
@@ -185,16 +180,26 @@ export class LocalRuleManager extends RateLimitManager<LocalPolicy, LocalRule> {
   }
 }
 
+const defaultOptions: PoeRateLimiterOptions = {
+  additionalDelayMs: 100,
+  extraRuleThreshold: 5,
+};
+
 /**
  * A rate limiter for the Poe API. Each instance should only be used for a single client id / account id.
  */
 export class PoeRateLimiter<PolicyImpl extends Policy, RuleImpl extends Rule> {
   private readonly options: PoeRateLimiterOptions;
+  public readonly manager: RateLimitManager<PolicyImpl, RuleImpl>;
+
   public constructor(
     options: Partial<PoeRateLimiterOptions>,
-    private readonly manager: RateLimitManager<PolicyImpl, RuleImpl>,
+    managerClass: new (
+      options: PoeRateLimiterOptions,
+    ) => RateLimitManager<PolicyImpl, RuleImpl>,
   ) {
     this.options = { ...defaultOptions, ...options };
+    this.manager = new managerClass(this.options);
   }
 
   private apiPathToPolicyMap = new Map<ServerApiPath, PolicyImpl>();
