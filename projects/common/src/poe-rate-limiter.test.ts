@@ -4,6 +4,8 @@ import {
   PoeRateLimiter,
   LocalRuleManager,
   PoeRateLimiterOptions,
+  LocalPolicy,
+  LocalRule,
 } from './poe-rate-limiter.js';
 import { serverApiPaths } from './poe.gen.js';
 
@@ -44,7 +46,7 @@ describe('LocalRuleManager', () => {
 });
 
 describe('PoeRateLimiter', () => {
-  let rateLimiter: PoeRateLimiter<any, any>;
+  let rateLimiter: PoeRateLimiter<LocalPolicy, LocalRule>;
   const options: Partial<PoeRateLimiterOptions> = {
     additionalDelayMs: 200,
   };
@@ -125,5 +127,59 @@ describe('PoeRateLimiter', () => {
     expect(nextAvailableTime.getTime()).toEqual(
       currentDate.getTime() + 60000 + options.additionalDelayMs!,
     );
+  });
+
+  it('should remove old rule calls from the queue', async () => {
+    const excessive = {
+      ...headers,
+      'x-rate-limit-rule1-state': '99:60:0', // just under max hits
+    };
+    await rateLimiter.updateLimiter(serverApiPaths['Get Character'], excessive);
+
+    // Advance time by 61 seconds to exceed the rule period
+    vi.advanceTimersByTime(60000 + options.additionalDelayMs!);
+
+    const nextAvailableTime = await rateLimiter.getNextAvailableTime(
+      serverApiPaths['Get Character'],
+    );
+
+    // Since the previous calls should have been removed, the next available time should be now
+    expect(nextAvailableTime.getTime()).toEqual(
+      currentDate.getTime() + 60000 + options.additionalDelayMs!,
+    );
+  });
+
+  it('should handle different policies with same rules', async () => {
+    const excessive = {
+      ...headers,
+    };
+    const headersPolicyA = {
+      ...excessive,
+      'x-rate-limit-policy': 'policyA',
+      'x-rate-limit-rule1-state': '94:60:0', // just under max hits
+    };
+    const headersPolicyB = {
+      ...excessive,
+      'x-rate-limit-policy': 'policyB',
+      'x-rate-limit-rule1-state': '95:60:0', // at the extra rule threshold
+    };
+
+    await rateLimiter.updateLimiter(
+      serverApiPaths['Get Character'],
+      headersPolicyA,
+    );
+    await rateLimiter.updateLimiter(
+      serverApiPaths['Get Exchange Markets'],
+      headersPolicyB,
+    );
+
+    const nextAvailableTimeA = await rateLimiter.getNextAvailableTime(
+      serverApiPaths['Get Character'],
+    );
+    const nextAvailableTimeB = await rateLimiter.getNextAvailableTime(
+      serverApiPaths['Get Exchange Markets'],
+    );
+
+    expect(nextAvailableTimeA.getTime()).toEqual(nextAvailableTimeB.getTime());
   });
 });

@@ -78,7 +78,7 @@ export class LocalRule extends Rule {
     this.listOfSentTimestamps.push(new Date());
     this.listOfSentTimestamps.splice(
       0,
-      this.listOfSentTimestamps.length - currentHitCount,
+      Math.max(0, this.listOfSentTimestamps.length - currentHitCount),
     );
 
     this.nextAvailableTime.setTime(Date.now());
@@ -102,7 +102,7 @@ export class LocalRule extends Rule {
 
     // At this point we are close to the limit...
     // If we don't have the proper amount of timestamps, we can't calculate the next available time
-    if (this.listOfSentTimestamps.length < this.maximumHitCount) {
+    if (this.listOfSentTimestamps.length != currentHitCount) {
       this.nextAvailableTime.setTime(
         Date.now() + this.periodTested * 1000 + this.options.additionalDelayMs,
       );
@@ -128,10 +128,8 @@ export class LocalPolicy extends Policy<LocalRule> {
   public constructor(
     public readonly name: string,
     public readonly ruleManager: LocalRuleManager,
-    options: PoeRateLimiterOptions,
   ) {
     super();
-    this.ruleManager = new LocalRuleManager(options);
   }
 
   public override updateRuleSet(ruleNames: string[]): void {
@@ -173,7 +171,7 @@ export class LocalRuleManager extends RateLimitManager<LocalPolicy, LocalRule> {
   public getPolicy(name: string): LocalPolicy {
     let policy = this.policyMap.get(name);
     if (!policy) {
-      policy = new LocalPolicy(name, this, this.options);
+      policy = new LocalPolicy(name, this);
       this.policyMap.set(name, policy);
     }
     return policy;
